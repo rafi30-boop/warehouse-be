@@ -10,50 +10,41 @@ class StokOpnameController extends Controller
 {
     public function index()
     {
-        return response()->json(StokOpname::with(['barang', 'gudang', 'user'])->get());
+        return response()->json(StokOpname::with(['gudang', 'createdBy', 'details.barang', 'details.lokasiRak'])->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'no_opname' => 'required|string|unique:stok_opnames',
+            'no_referensi' => 'required|string|unique:stok_opname',
+            'gudang_id' => 'required|exists:gudang,id',
             'tanggal' => 'required|date',
-            'barang_id' => 'required|exists:barangs,id',
-            'gudang_id' => 'required|exists:gudangs,id',
-            'stok_sistem' => 'required|integer',
-            'stok_fisik' => 'required|integer',
             'keterangan' => 'nullable|string',
+            'status' => 'in:draft,in_progress,completed,cancelled',
         ]);
 
-        $data['selisih'] = $data['stok_fisik'] - $data['stok_sistem'];
-        $data['user_id'] = $request->user()->id;
+        $data['created_by'] = $request->user()->id;
 
         return response()->json(StokOpname::create($data), 201);
     }
 
     public function show(StokOpname $stokOpname)
     {
-        return response()->json($stokOpname->load(['barang', 'gudang', 'user']));
+        return response()->json($stokOpname->load(['gudang', 'createdBy', 'approvedBy', 'details.barang', 'details.lokasiRak']));
     }
 
     public function update(Request $request, StokOpname $stokOpname)
     {
         $data = $request->validate([
-            'no_opname' => 'string|unique:stok_opnames,no_opname,' . $stokOpname->id,
+            'no_referensi' => 'string|unique:stok_opname,no_referensi,' . $stokOpname->id,
+            'gudang_id' => 'exists:gudang,id',
             'tanggal' => 'date',
-            'barang_id' => 'exists:barangs,id',
-            'gudang_id' => 'exists:gudangs,id',
-            'stok_sistem' => 'integer',
-            'stok_fisik' => 'integer',
             'keterangan' => 'nullable|string',
+            'status' => 'in:draft,in_progress,completed,cancelled',
         ]);
 
-        if (isset($data['stok_fisik']) || isset($data['stok_sistem'])) {
-            $data['selisih'] = ($data['stok_fisik'] ?? $stokOpname->stok_fisik) - ($data['stok_sistem'] ?? $stokOpname->stok_sistem);
-        }
-
         $stokOpname->update($data);
-        return response()->json($stokOpname->load(['barang', 'gudang', 'user']));
+        return response()->json($stokOpname->load(['gudang', 'createdBy', 'approvedBy', 'details.barang', 'details.lokasiRak']));
     }
 
     public function destroy(StokOpname $stokOpname)

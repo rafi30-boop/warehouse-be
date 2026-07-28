@@ -10,21 +10,25 @@ class BarangController extends Controller
 {
     public function index()
     {
-        return response()->json(Barang::with('kategori')->get());
+        return response()->json(Barang::with(['kategori', 'satuan'])->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kode' => 'required|string|unique:barangs',
+            'sku' => 'required|string|unique:barang',
+            'barcode' => 'nullable|string|unique:barang',
             'nama' => 'required|string',
-            'kategori_id' => 'required|exists:kategoris,id',
-            'satuan' => 'required|string',
-            'harga_beli' => 'numeric',
-            'harga_jual' => 'numeric',
-            'stok_minimum' => 'integer',
+            'kategori_id' => 'required|exists:kategori_barang,id',
+            'satuan_id' => 'required|exists:satuan,id',
+            'min_stok' => 'numeric|min:0',
+            'max_stok' => 'numeric|min:0',
+            'berat' => 'nullable|numeric',
+            'foto' => 'nullable|string',
+            'harga_beli' => 'numeric|min:0',
+            'harga_jual' => 'numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'is_active' => 'boolean',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         return response()->json(Barang::create($data), 201);
@@ -32,25 +36,29 @@ class BarangController extends Controller
 
     public function show(Barang $barang)
     {
-        return response()->json($barang->load('kategori'));
+        return response()->json($barang->load(['kategori', 'satuan']));
     }
 
     public function update(Request $request, Barang $barang)
     {
         $data = $request->validate([
-            'kode' => 'string|unique:barangs,kode,' . $barang->id,
+            'sku' => 'string|unique:barang,sku,' . $barang->id,
+            'barcode' => 'nullable|string|unique:barang,barcode,' . $barang->id,
             'nama' => 'string',
-            'kategori_id' => 'exists:kategoris,id',
-            'satuan' => 'string',
-            'harga_beli' => 'numeric',
-            'harga_jual' => 'numeric',
-            'stok_minimum' => 'integer',
+            'kategori_id' => 'exists:kategori_barang,id',
+            'satuan_id' => 'exists:satuan,id',
+            'min_stok' => 'numeric|min:0',
+            'max_stok' => 'numeric|min:0',
+            'berat' => 'nullable|numeric',
+            'foto' => 'nullable|string',
+            'harga_beli' => 'numeric|min:0',
+            'harga_jual' => 'numeric|min:0',
             'deskripsi' => 'nullable|string',
-            'is_active' => 'boolean',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         $barang->update($data);
-        return response()->json($barang->load('kategori'));
+        return response()->json($barang->load(['kategori', 'satuan']));
     }
 
     public function destroy(Barang $barang)

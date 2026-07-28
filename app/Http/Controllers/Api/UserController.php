@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        return response()->json(User::with('roles')->get());
+        return response()->json(User::with(['roles', 'gudang'])->get());
     }
 
     public function store(Request $request)
@@ -20,6 +20,11 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
+            'gudang_id' => 'nullable|exists:gudang,id',
+            'no_pegawai' => 'nullable|string|unique:users',
+            'telepon' => 'nullable|string',
+            'foto' => 'nullable|string',
+            'is_active' => 'boolean',
             'roles' => 'array',
             'roles.*' => 'exists:roles,name',
         ]);
@@ -31,12 +36,12 @@ class UserController extends Controller
             $user->assignRole($data['roles']);
         }
 
-        return response()->json($user->load('roles'), 201);
+        return response()->json($user->load(['roles', 'gudang']), 201);
     }
 
     public function show(User $user)
     {
-        return response()->json($user->load('roles.permissions'));
+        return response()->json($user->load(['roles.permissions', 'gudang']));
     }
 
     public function update(Request $request, User $user)
@@ -45,6 +50,11 @@ class UserController extends Controller
             'name' => 'string|max:255',
             'email' => 'email|unique:users,email,' . $user->id,
             'password' => 'nullable|min:8',
+            'gudang_id' => 'nullable|exists:gudang,id',
+            'no_pegawai' => 'nullable|string|unique:users,no_pegawai,' . $user->id,
+            'telepon' => 'nullable|string',
+            'foto' => 'nullable|string',
+            'is_active' => 'boolean',
             'roles' => 'array',
             'roles.*' => 'exists:roles,name',
         ]);
@@ -59,7 +69,7 @@ class UserController extends Controller
             $user->syncRoles($data['roles']);
         }
 
-        return response()->json($user->load('roles'));
+        return response()->json($user->load(['roles', 'gudang']));
     }
 
     public function destroy(User $user)

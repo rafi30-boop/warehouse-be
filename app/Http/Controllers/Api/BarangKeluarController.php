@@ -10,52 +10,47 @@ class BarangKeluarController extends Controller
 {
     public function index()
     {
-        return response()->json(BarangKeluar::with(['barang', 'gudang', 'customer', 'user'])->get());
+        return response()->json(BarangKeluar::with(['gudang', 'customer', 'createdBy', 'details.barang', 'details.lokasiRak'])->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'no_transaksi' => 'required|string|unique:barang_keluars',
+            'no_referensi' => 'required|string|unique:barang_keluar',
+            'nomor_surat_jalan' => 'nullable|string',
+            'gudang_id' => 'required|exists:gudang,id',
+            'customer_id' => 'required|exists:customer,id',
             'tanggal' => 'required|date',
-            'barang_id' => 'required|exists:barangs,id',
-            'gudang_id' => 'required|exists:gudangs,id',
-            'customer_id' => 'required|exists:customers,id',
-            'jumlah' => 'required|integer|min:1',
-            'harga_satuan' => 'required|numeric',
             'keterangan' => 'nullable|string',
+            'status' => 'in:pending,approved,rejected,delivered,partial',
+            'dokumen' => 'nullable|string',
         ]);
 
-        $data['total_harga'] = $data['jumlah'] * $data['harga_satuan'];
-        $data['user_id'] = $request->user()->id;
+        $data['created_by'] = $request->user()->id;
 
         return response()->json(BarangKeluar::create($data), 201);
     }
 
     public function show(BarangKeluar $barangKeluar)
     {
-        return response()->json($barangKeluar->load(['barang', 'gudang', 'customer', 'user']));
+        return response()->json($barangKeluar->load(['gudang', 'customer', 'createdBy', 'approvedBy', 'deliveredBy', 'details.barang', 'details.lokasiRak']));
     }
 
     public function update(Request $request, BarangKeluar $barangKeluar)
     {
         $data = $request->validate([
-            'no_transaksi' => 'string|unique:barang_keluars,no_transaksi,' . $barangKeluar->id,
+            'no_referensi' => 'string|unique:barang_keluar,no_referensi,' . $barangKeluar->id,
+            'nomor_surat_jalan' => 'nullable|string',
+            'gudang_id' => 'exists:gudang,id',
+            'customer_id' => 'exists:customer,id',
             'tanggal' => 'date',
-            'barang_id' => 'exists:barangs,id',
-            'gudang_id' => 'exists:gudangs,id',
-            'customer_id' => 'exists:customers,id',
-            'jumlah' => 'integer|min:1',
-            'harga_satuan' => 'numeric',
             'keterangan' => 'nullable|string',
+            'status' => 'in:pending,approved,rejected,delivered,partial',
+            'dokumen' => 'nullable|string',
         ]);
 
-        if (isset($data['jumlah']) || isset($data['harga_satuan'])) {
-            $data['total_harga'] = ($data['jumlah'] ?? $barangKeluar->jumlah) * ($data['harga_satuan'] ?? $barangKeluar->harga_satuan);
-        }
-
         $barangKeluar->update($data);
-        return response()->json($barangKeluar->load(['barang', 'gudang', 'customer', 'user']));
+        return response()->json($barangKeluar->load(['gudang', 'customer', 'createdBy', 'approvedBy', 'deliveredBy', 'details.barang', 'details.lokasiRak']));
     }
 
     public function destroy(BarangKeluar $barangKeluar)

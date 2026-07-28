@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class MutasiStok extends Model
 {
-    protected $fillable = ['no_mutasi', 'tanggal', 'barang_id', 'gudang_asal_id', 'gudang_tujuan_id', 'jumlah', 'keterangan', 'user_id'];
+    protected $table = 'mutasi_stok';
+
+    protected $fillable = [
+        'no_referensi', 'barang_id', 'gudang_asal_id', 'gudang_tujuan_id',
+        'lokasi_rak_asal_id', 'lokasi_rak_tujuan_id', 'qty', 'tanggal',
+        'keterangan', 'status', 'created_by', 'approved_by', 'approved_at',
+    ];
 
     public function barang()
     {
@@ -23,8 +29,23 @@ class MutasiStok extends Model
         return $this->belongsTo(Gudang::class, 'gudang_tujuan_id');
     }
 
-    public function user()
+    public function lokasiRakAsal()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(LokasiRak::class, 'lokasi_rak_asal_id');
+    }
+
+    public function lokasiRakTujuan()
+    {
+        return $this->belongsTo(LokasiRak::class, 'lokasi_rak_tujuan_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

@@ -16,13 +16,14 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kode' => 'required|string|unique:suppliers',
+            'kode' => 'required|string|unique:supplier',
+            'tipe' => 'required|in:perusahaan,pribadi',
             'nama' => 'required|string',
-            'alamat' => 'nullable|string',
+            'kontak' => 'nullable|string',
             'telepon' => 'nullable|string',
             'email' => 'nullable|email',
-            'kontak_person' => 'nullable|string',
-            'is_active' => 'boolean',
+            'alamat' => 'nullable|string',
+            'npwp' => 'nullable|string',
         ]);
 
         return response()->json(Supplier::create($data), 201);
@@ -36,13 +37,14 @@ class SupplierController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         $data = $request->validate([
-            'kode' => 'string|unique:suppliers,kode,' . $supplier->id,
+            'kode' => 'string|unique:supplier,kode,' . $supplier->id,
+            'tipe' => 'in:perusahaan,pribadi',
             'nama' => 'string',
-            'alamat' => 'nullable|string',
+            'kontak' => 'nullable|string',
             'telepon' => 'nullable|string',
             'email' => 'nullable|email',
-            'kontak_person' => 'nullable|string',
-            'is_active' => 'boolean',
+            'alamat' => 'nullable|string',
+            'npwp' => 'nullable|string',
         ]);
 
         $supplier->update($data);

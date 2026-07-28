@@ -10,18 +10,24 @@ class AbsensiController extends Controller
 {
     public function index()
     {
-        return response()->json(Absensi::with(['user', 'shift'])->get());
+        return response()->json(Absensi::with(['user', 'gudang', 'shift'])->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'shift_id' => 'required|exists:shifts,id',
+            'gudang_id' => 'required|exists:gudang,id',
+            'shift_id' => 'required|exists:shift,id',
             'tanggal' => 'required|date',
             'jam_masuk' => 'nullable|date_format:H:i',
-            'jam_keluar' => 'nullable|date_format:H:i',
-            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'jam_pulang' => 'nullable|date_format:H:i',
+            'status' => 'required|in:hadir,izin,sakit,alpha,cuti,terlambat',
+            'lokasi_checkin' => 'nullable|string',
+            'lokasi_checkout' => 'nullable|string',
+            'radius_validasi' => 'nullable|integer',
+            'foto_masuk' => 'nullable|string',
+            'foto_pulang' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -30,23 +36,29 @@ class AbsensiController extends Controller
 
     public function show(Absensi $absensi)
     {
-        return response()->json($absensi->load(['user', 'shift']));
+        return response()->json($absensi->load(['user', 'gudang', 'shift', 'approvedBy']));
     }
 
     public function update(Request $request, Absensi $absensi)
     {
         $data = $request->validate([
             'user_id' => 'exists:users,id',
-            'shift_id' => 'exists:shifts,id',
+            'gudang_id' => 'exists:gudang,id',
+            'shift_id' => 'exists:shift,id',
             'tanggal' => 'date',
             'jam_masuk' => 'nullable|date_format:H:i',
-            'jam_keluar' => 'nullable|date_format:H:i',
-            'status' => 'in:hadir,izin,sakit,alpha',
+            'jam_pulang' => 'nullable|date_format:H:i',
+            'status' => 'in:hadir,izin,sakit,alpha,cuti,terlambat',
+            'lokasi_checkin' => 'nullable|string',
+            'lokasi_checkout' => 'nullable|string',
+            'radius_validasi' => 'nullable|integer',
+            'foto_masuk' => 'nullable|string',
+            'foto_pulang' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
         $absensi->update($data);
-        return response()->json($absensi->load(['user', 'shift']));
+        return response()->json($absensi->load(['user', 'gudang', 'shift', 'approvedBy']));
     }
 
     public function destroy(Absensi $absensi)

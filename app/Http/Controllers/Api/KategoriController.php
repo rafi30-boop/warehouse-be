@@ -10,15 +10,15 @@ class KategoriController extends Controller
 {
     public function index()
     {
-        return response()->json(Kategori::all());
+        return response()->json(Kategori::with('parent')->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
+            'parent_id' => 'nullable|exists:kategori_barang,id',
             'nama' => 'required|string',
             'deskripsi' => 'nullable|string',
-            'is_active' => 'boolean',
         ]);
 
         return response()->json(Kategori::create($data), 201);
@@ -26,15 +26,15 @@ class KategoriController extends Controller
 
     public function show(Kategori $kategori)
     {
-        return response()->json($kategori);
+        return response()->json($kategori->load(['parent', 'children']));
     }
 
     public function update(Request $request, Kategori $kategori)
     {
         $data = $request->validate([
+            'parent_id' => 'nullable|exists:kategori_barang,id',
             'nama' => 'string',
             'deskripsi' => 'nullable|string',
-            'is_active' => 'boolean',
         ]);
 
         $kategori->update($data);

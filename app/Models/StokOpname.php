@@ -3,23 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StokOpname extends Model
 {
-    protected $fillable = ['no_opname', 'tanggal', 'barang_id', 'gudang_id', 'stok_sistem', 'stok_fisik', 'selisih', 'keterangan', 'user_id'];
+    use SoftDeletes;
 
-    public function barang()
-    {
-        return $this->belongsTo(Barang::class);
-    }
+    protected $table = 'stok_opname';
+
+    protected $fillable = [
+        'no_referensi', 'gudang_id', 'tanggal', 'keterangan',
+        'status', 'created_by', 'approved_by', 'approved_at',
+    ];
 
     public function gudang()
     {
         return $this->belongsTo(Gudang::class);
     }
 
-    public function user()
+    public function createdBy()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(StokOpnameDetail::class);
     }
 }

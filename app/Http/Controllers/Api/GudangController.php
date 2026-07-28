@@ -16,11 +16,14 @@ class GudangController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kode' => 'required|string|unique:gudangs',
+            'kode' => 'required|string|unique:gudang',
             'nama' => 'required|string',
             'alamat' => 'nullable|string',
-            'keterangan' => 'nullable|string',
-            'is_active' => 'boolean',
+            'pic' => 'nullable|string',
+            'telepon' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         return response()->json(Gudang::create($data), 201);
@@ -28,17 +31,20 @@ class GudangController extends Controller
 
     public function show(Gudang $gudang)
     {
-        return response()->json($gudang);
+        return response()->json($gudang->load('lokasiRak'));
     }
 
     public function update(Request $request, Gudang $gudang)
     {
         $data = $request->validate([
-            'kode' => 'string|unique:gudangs,kode,' . $gudang->id,
+            'kode' => 'string|unique:gudang,kode,' . $gudang->id,
             'nama' => 'string',
             'alamat' => 'nullable|string',
-            'keterangan' => 'nullable|string',
-            'is_active' => 'boolean',
+            'pic' => 'nullable|string',
+            'telepon' => 'nullable|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         $gudang->update($data);

@@ -17,9 +17,11 @@ class ShiftController extends Controller
     {
         $data = $request->validate([
             'nama' => 'required|string',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i',
-            'is_active' => 'boolean',
+            'jam_masuk' => 'required|date_format:H:i',
+            'jam_pulang' => 'required|date_format:H:i',
+            'toleransi_masuk' => 'integer|min:0',
+            'toleransi_pulang' => 'integer|min:0',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         return response()->json(Shift::create($data), 201);
@@ -34,9 +36,11 @@ class ShiftController extends Controller
     {
         $data = $request->validate([
             'nama' => 'string',
-            'jam_mulai' => 'date_format:H:i',
-            'jam_selesai' => 'date_format:H:i',
-            'is_active' => 'boolean',
+            'jam_masuk' => 'date_format:H:i',
+            'jam_pulang' => 'date_format:H:i',
+            'toleransi_masuk' => 'integer|min:0',
+            'toleransi_pulang' => 'integer|min:0',
+            'status' => 'in:aktif,nonaktif',
         ]);
 
         $shift->update($data);

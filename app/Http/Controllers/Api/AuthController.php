@@ -25,10 +25,18 @@ class AuthController extends Controller
             ]);
         }
 
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been deactivated.'],
+            ]);
+        }
+
+        $user->update(['last_login_at' => now()]);
+
         $token = $user->createToken('api-token')->accessToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $user->load(['roles', 'gudang']),
             'token' => $token,
         ]);
     }
@@ -57,7 +65,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user()->load('roles.permissions'));
+        return response()->json($request->user()->load(['roles.permissions', 'gudang']));
     }
 
     public function logout(Request $request)

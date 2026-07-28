@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class BarangMasuk extends Model
 {
-    protected $fillable = ['no_transaksi', 'tanggal', 'barang_id', 'gudang_id', 'supplier_id', 'jumlah', 'harga_satuan', 'total_harga', 'keterangan', 'user_id'];
+    protected $table = 'barang_masuk';
 
-    public function barang()
-    {
-        return $this->belongsTo(Barang::class);
-    }
+    protected $fillable = [
+        'no_referensi', 'nomor_surat_jalan', 'gudang_id', 'supplier_id',
+        'tanggal', 'keterangan', 'status', 'created_by', 'approved_by',
+        'approved_at', 'dokumen',
+    ];
 
     public function gudang()
     {
@@ -23,8 +24,18 @@ class BarangMasuk extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function user()
+    public function createdBy()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(BarangMasukDetail::class);
     }
 }
