@@ -28,10 +28,16 @@ return new class extends Migration
             $table->index(['user_id', 'tanggal']);
         });
 
-        DB::statement('ALTER TABLE absensi ADD lokasi_checkin POINT NOT NULL');
-        DB::statement('ALTER TABLE absensi ADD lokasi_checkout POINT NOT NULL');
-        DB::statement('CREATE SPATIAL INDEX absensi_lokasi_checkin_index ON absensi (lokasi_checkin)');
-        DB::statement('CREATE SPATIAL INDEX absensi_lokasi_checkout_index ON absensi (lokasi_checkout)');
+        $driver = Schema::getConnection()->getDriverName();
+        if ($driver === 'mysql') {
+            DB::statement('ALTER TABLE absensi ADD lokasi_checkin POINT NULL');
+            DB::statement('ALTER TABLE absensi ADD lokasi_checkout POINT NULL');
+        } else {
+            Schema::table('absensi', function (Blueprint $table) {
+                $table->string('lokasi_checkin')->nullable();
+                $table->string('lokasi_checkout')->nullable();
+            });
+        }
     }
 
     public function down(): void

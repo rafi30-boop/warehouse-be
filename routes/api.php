@@ -17,19 +17,24 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\LaporanController;
 
-Route::post('login', [AuthController::class, 'login']);
-Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:auth');
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:auth');
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
 
     Route::apiResource('gudang', GudangController::class);
+    Route::get('barang/export/excel', [BarangController::class, 'exportExcel']);
     Route::apiResource('barang', BarangController::class);
     Route::apiResource('kategori', KategoriController::class);
     Route::apiResource('supplier', SupplierController::class);
     Route::apiResource('customer', CustomerController::class);
+    Route::get('barang-masuk/{barang_masuk}/print-surat-jalan', [BarangMasukController::class, 'printSuratJalan']);
+    Route::get('barang-masuk/export/excel', [BarangMasukController::class, 'exportExcel']);
     Route::apiResource('barang-masuk', BarangMasukController::class);
+    Route::get('barang-keluar/{barang_keluar}/print-surat-jalan', [BarangKeluarController::class, 'printSuratJalan']);
+    Route::get('barang-keluar/export/excel', [BarangKeluarController::class, 'exportExcel']);
     Route::apiResource('barang-keluar', BarangKeluarController::class);
     Route::apiResource('mutasi-stok', MutasiStokController::class);
     Route::apiResource('stok-opname', StokOpnameController::class);

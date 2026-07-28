@@ -28,6 +28,9 @@ class RolePermissionSeeder extends Seeder
             'role-list', 'role-create', 'role-edit', 'role-delete',
             'laporan-stok', 'laporan-barang-masuk', 'laporan-barang-keluar',
             'laporan-mutasi-stok', 'laporan-stok-opname', 'laporan-absensi',
+            'barang-export',
+            'barang-masuk-export', 'barang-masuk-print',
+            'barang-keluar-export', 'barang-keluar-print',
         ];
 
         foreach ($permissions as $permission) {

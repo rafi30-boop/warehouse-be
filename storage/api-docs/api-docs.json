@@ -1,0 +1,4459 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Warehouse Management API",
+        "description": "API for warehouse management system including inventory, stock movements, attendance, and reporting.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "{host}",
+            "description": "API Server",
+            "variables": {
+                "host": {
+                    "default": "http://localhost:8000"
+                }
+            }
+        }
+    ],
+    "paths": {
+        "/api/absensi": {
+            "get": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "List all absensi",
+                "operationId": "3c3030d50699d656816de9d16995f323",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of absensi"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Create absensi",
+                "operationId": "a806dde576e9bfbe8e67381e0230549e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAbsensiRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Absensi created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/absensi/{absensi}": {
+            "get": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Get absensi by ID",
+                "operationId": "a9f11481b005229db5be40002fbcf3c7",
+                "parameters": [
+                    {
+                        "name": "absensi",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Absensi detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Update absensi",
+                "operationId": "d77bcf984780aca1ad99adf2d851a253",
+                "parameters": [
+                    {
+                        "name": "absensi",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreAbsensiRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Absensi updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Delete absensi",
+                "operationId": "b7e692d71dc807eb123d0938e516d85d",
+                "parameters": [
+                    {
+                        "name": "absensi",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Absensi deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "operationId": "222b2625838e3c57e017987f73598fda",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login berhasil"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register new user",
+                "operationId": "8e4e3cb7b46126f4696379d3c7eeb4ad",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registrasi berhasil"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string"
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get authenticated user",
+                "operationId": "8367feff40ba10e43187792cad3132c1",
+                "responses": {
+                    "200": {
+                        "description": "Current user data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout user",
+                "operationId": "ad65cbbd4e9f201619eae184a5961a98",
+                "responses": {
+                    "200": {
+                        "description": "Logout success"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang/export/excel": {
+            "get": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "Export barang to Excel",
+                "operationId": "491f9bce922c21457464664b6ee29d0a",
+                "responses": {
+                    "200": {
+                        "description": "Excel file download"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang": {
+            "get": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "List all barang",
+                "operationId": "08c9792f59109c801e299578c394f9e8",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kategori_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of barang"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "Create barang",
+                "operationId": "e5832d5f5af56920ca06c8eaf23739e0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Barang created"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang/{barang}": {
+            "get": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "Get barang by ID",
+                "operationId": "1a9b4b9b47391d44c05a9a771d0461a6",
+                "parameters": [
+                    {
+                        "name": "barang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Barang detail"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "Update barang",
+                "operationId": "df1cebe589c46558d24de840ad5093bd",
+                "parameters": [
+                    {
+                        "name": "barang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Barang updated"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Barang"
+                ],
+                "summary": "Delete barang",
+                "operationId": "41d2997db0ce902aabe34839203b44c7",
+                "parameters": [
+                    {
+                        "name": "barang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Barang deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-keluar/export/excel": {
+            "get": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Export barang keluar to Excel",
+                "operationId": "5168a9ef1ea432308bbb9bc6ff41f457",
+                "responses": {
+                    "200": {
+                        "description": "Excel file download"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-keluar/{barang_keluar}/print-surat-jalan": {
+            "get": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Print surat jalan for barang keluar",
+                "operationId": "be9f4f0dd0e551ae936beab552cb53ec",
+                "parameters": [
+                    {
+                        "name": "barang_keluar",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF surat jalan"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-keluar": {
+            "get": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "List all barang keluar",
+                "operationId": "9317590bf89efdbf35f202ce729f3aa2",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of barang keluar"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Create barang keluar",
+                "operationId": "e17a6150a24e658e935dfb652655ea62",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangKeluarRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Barang keluar created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-keluar/{barang_keluar}": {
+            "get": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Get barang keluar by ID",
+                "operationId": "ba287184893d0ac022988d2d5e689883",
+                "parameters": [
+                    {
+                        "name": "barang_keluar",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Barang keluar detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Update barang keluar",
+                "operationId": "27e9dc1584a32eb1186871a96047a090",
+                "parameters": [
+                    {
+                        "name": "barang_keluar",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangKeluarRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Barang keluar updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Barang Keluar"
+                ],
+                "summary": "Delete barang keluar",
+                "operationId": "edaf7c4744ba8ca155bf08c4d247d3c0",
+                "parameters": [
+                    {
+                        "name": "barang_keluar",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Barang keluar deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-masuk/export/excel": {
+            "get": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Export barang masuk to Excel",
+                "operationId": "f80cca0d4187f89843386643d96ec481",
+                "responses": {
+                    "200": {
+                        "description": "Excel file download"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-masuk/{barang_masuk}/print-surat-jalan": {
+            "get": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Print surat jalan for barang masuk",
+                "operationId": "dadfdb86e8c2d7b2a0fdb323683ea6d9",
+                "parameters": [
+                    {
+                        "name": "barang_masuk",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF surat jalan"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-masuk": {
+            "get": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "List all barang masuk",
+                "operationId": "b7323e16e67422ef3067507c935ce828",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of barang masuk"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Create barang masuk",
+                "operationId": "c636b48db7f55fb4889a60d858645734",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangMasukRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Barang masuk created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/barang-masuk/{barang_masuk}": {
+            "get": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Get barang masuk by ID",
+                "operationId": "aee6389b6e73bd5969060c5f6d29ece9",
+                "parameters": [
+                    {
+                        "name": "barang_masuk",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Barang masuk detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Update barang masuk",
+                "operationId": "ed2cb8a64203a5d3183e67687e4dd11a",
+                "parameters": [
+                    {
+                        "name": "barang_masuk",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreBarangMasukRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Barang masuk updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Barang Masuk"
+                ],
+                "summary": "Delete barang masuk",
+                "operationId": "c068fbf662f316c14cbf6365e1b67e54",
+                "parameters": [
+                    {
+                        "name": "barang_masuk",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Barang masuk deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/customer": {
+            "get": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "List all customer",
+                "operationId": "785bf2d6b89eaeaddc13796bc2ce3fe2",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of customer"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Create customer",
+                "operationId": "de392634a8c879c2bf3df80d084ea0ad",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCustomerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Customer created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/customer/{customer}": {
+            "get": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Get customer by ID",
+                "operationId": "f6c947e7e49d88d4721fe341ed5dcbec",
+                "parameters": [
+                    {
+                        "name": "customer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customer detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Update customer",
+                "operationId": "9f6f328537da9944ee217d390482e348",
+                "parameters": [
+                    {
+                        "name": "customer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCustomerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Delete customer",
+                "operationId": "ba624422b35bb5e25ae0c765161c9937",
+                "parameters": [
+                    {
+                        "name": "customer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Customer deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/gudang": {
+            "get": {
+                "tags": [
+                    "Gudang"
+                ],
+                "summary": "List all gudang",
+                "operationId": "8efe7ecdab967baeaede583c79470389",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of gudang"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Gudang"
+                ],
+                "summary": "Create gudang",
+                "operationId": "9a0b8a375dcecc98dddc9c33216e51a5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreGudangRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Gudang created"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/gudang/{gudang}": {
+            "get": {
+                "tags": [
+                    "Gudang"
+                ],
+                "summary": "Get gudang by ID",
+                "operationId": "780da2d0df79bef2f7d55e2540113449",
+                "parameters": [
+                    {
+                        "name": "gudang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Gudang detail"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Gudang"
+                ],
+                "summary": "Update gudang",
+                "operationId": "df2ce4b21874c62cf2a4a2d8e63c1592",
+                "parameters": [
+                    {
+                        "name": "gudang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreGudangRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Gudang updated"
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Gudang"
+                ],
+                "summary": "Delete gudang",
+                "operationId": "32a928478d032303d78b33e1a39a83dd",
+                "parameters": [
+                    {
+                        "name": "gudang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Gudang deleted"
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/kategori": {
+            "get": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "List all kategori",
+                "operationId": "7859f77a79e6eba83303683052eaaa59",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of kategori"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Create kategori",
+                "operationId": "cfc2bf78680407adc9f8ad42c00a3758",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreKategoriRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kategori created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/kategori/{kategori}": {
+            "get": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Get kategori by ID",
+                "operationId": "60dd1b937ff19807b796b712e85c66fa",
+                "parameters": [
+                    {
+                        "name": "kategori",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kategori detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Update kategori",
+                "operationId": "a091536be9ccb0b1c4599619095bc0b2",
+                "parameters": [
+                    {
+                        "name": "kategori",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreKategoriRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kategori updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Kategori"
+                ],
+                "summary": "Delete kategori",
+                "operationId": "3c70465e78e5c6c65ee1a4c2c8b50cda",
+                "parameters": [
+                    {
+                        "name": "kategori",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Kategori deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/stok": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report stok barang",
+                "operationId": "55dd90a25ffc1bc3bab21623ae56c8a6",
+                "parameters": [
+                    {
+                        "name": "gudang_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "kategori_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stok report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/barang-masuk": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report barang masuk",
+                "operationId": "39eb6aea5b695dc387856dd14cd2c492",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "gudang_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Barang masuk report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/barang-keluar": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report barang keluar",
+                "operationId": "a480928b883218b820466b66b57c705c",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "gudang_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Barang keluar report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/mutasi-stok": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report mutasi stok",
+                "operationId": "ca76e507e5a9f483dd6aff05c6b8193b",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "gudang_asal_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mutasi stok report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/stok-opname": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report stok opname",
+                "operationId": "b58befacf26a122ad19a54197f4be559",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "gudang_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stok opname report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/laporan/absensi": {
+            "get": {
+                "tags": [
+                    "Laporan"
+                ],
+                "summary": "Report absensi",
+                "operationId": "e8c62e431a52f6297e9dc3706f1fd552",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Absensi report data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/mutasi-stok": {
+            "get": {
+                "tags": [
+                    "Mutasi Stok"
+                ],
+                "summary": "List all mutasi stok",
+                "operationId": "76d49141de429c6d8f2cfcd45a93e89a",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of mutasi stok"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Mutasi Stok"
+                ],
+                "summary": "Create mutasi stok",
+                "operationId": "7416c6c95b2649f1109fb6c6fe18141e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreMutasiStokRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Mutasi stok created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/mutasi-stok/{mutasi_stok}": {
+            "get": {
+                "tags": [
+                    "Mutasi Stok"
+                ],
+                "summary": "Get mutasi stok by ID",
+                "operationId": "6f067a1f8d42f1c9656b3320aa51921e",
+                "parameters": [
+                    {
+                        "name": "mutasi_stok",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mutasi stok detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Mutasi Stok"
+                ],
+                "summary": "Update mutasi stok",
+                "operationId": "2a840d3bbc901c90677e05b58fd9ceca",
+                "parameters": [
+                    {
+                        "name": "mutasi_stok",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreMutasiStokRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mutasi stok updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Mutasi Stok"
+                ],
+                "summary": "Delete mutasi stok",
+                "operationId": "dc8bf071505a37455dd1df50513a3668",
+                "parameters": [
+                    {
+                        "name": "mutasi_stok",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Mutasi stok deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/role": {
+            "get": {
+                "tags": [
+                    "Role"
+                ],
+                "summary": "List all role",
+                "operationId": "a7549b0bc1566cc8e2cb8358f139a2ee",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of role"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Create role",
+                "operationId": "65d75fe4655bd29ae5109c70ac4b9177",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Role created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/role/{role}": {
+            "get": {
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Get role by ID",
+                "operationId": "066f7a0e8d256e51185bca8b376f0c6e",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Update role",
+                "operationId": "c599e61ceac820f25894d3eb9eaa49c4",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreRoleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Role updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Role"
+                ],
+                "summary": "Delete role",
+                "operationId": "696c2df268a5a0d6c0ec3a569ee5f07c",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Role deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/shift": {
+            "get": {
+                "tags": [
+                    "Shift"
+                ],
+                "summary": "List all shift",
+                "operationId": "411eb67f6a1e5237481535d67e6537d4",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of shift"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Shift"
+                ],
+                "summary": "Create shift",
+                "operationId": "dde7164c8e67889d019c1b8651464319",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreShiftRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Shift created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/shift/{shift}": {
+            "get": {
+                "tags": [
+                    "Shift"
+                ],
+                "summary": "Get shift by ID",
+                "operationId": "52cb3976814d4586838ff381cb8ea5f2",
+                "parameters": [
+                    {
+                        "name": "shift",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Shift detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Shift"
+                ],
+                "summary": "Update shift",
+                "operationId": "f33967e0aab38e23904e493cd795e515",
+                "parameters": [
+                    {
+                        "name": "shift",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreShiftRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Shift updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Shift"
+                ],
+                "summary": "Delete shift",
+                "operationId": "37e543cc1bb04ee787ee0a230f10a9ca",
+                "parameters": [
+                    {
+                        "name": "shift",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Shift deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stok-opname": {
+            "get": {
+                "tags": [
+                    "Stok Opname"
+                ],
+                "summary": "List all stok opname",
+                "operationId": "ca4ad5c961f8be64f39174cc8363964c",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of stok opname"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stok Opname"
+                ],
+                "summary": "Create stok opname",
+                "operationId": "39fd6963f8cfef3ddf68a5d0303a1259",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreStokOpnameRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stok opname created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stok-opname/{stok_opname}": {
+            "get": {
+                "tags": [
+                    "Stok Opname"
+                ],
+                "summary": "Get stok opname by ID",
+                "operationId": "c6ca627b17c9489da1497d3492f1f28f",
+                "parameters": [
+                    {
+                        "name": "stok_opname",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stok opname detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stok Opname"
+                ],
+                "summary": "Update stok opname",
+                "operationId": "2071c8cefc6a6f3ded02296928293fa5",
+                "parameters": [
+                    {
+                        "name": "stok_opname",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreStokOpnameRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stok opname updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stok Opname"
+                ],
+                "summary": "Delete stok opname",
+                "operationId": "8a0ffe35730cc93addcd0151265b6cef",
+                "parameters": [
+                    {
+                        "name": "stok_opname",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Stok opname deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/supplier": {
+            "get": {
+                "tags": [
+                    "Supplier"
+                ],
+                "summary": "List all supplier",
+                "operationId": "061306f33d057f23ce8102d600bbb2b6",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of supplier"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Supplier"
+                ],
+                "summary": "Create supplier",
+                "operationId": "04c1b08dce17aa35944477dae066b5f0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreSupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/supplier/{supplier}": {
+            "get": {
+                "tags": [
+                    "Supplier"
+                ],
+                "summary": "Get supplier by ID",
+                "operationId": "89ff45d54351a81d0feb532d44ffe576",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Supplier"
+                ],
+                "summary": "Update supplier",
+                "operationId": "ceb727c3e51320df8cecc16682867434",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreSupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Supplier"
+                ],
+                "summary": "Delete supplier",
+                "operationId": "ef5f02bf88f4d809464b4beeae108f60",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Supplier deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "List all user",
+                "operationId": "ef3192335324c07faff67807a2e8a2f8",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of user"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Create user",
+                "operationId": "287bc3ec931e652c54bb2ddb777040bc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/user/{user}": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get user by ID",
+                "operationId": "e09b34d13524b82ad3cc12f174fe2cb9",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User detail"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user",
+                "operationId": "280a16572cbf0240b296fc2c686d5c45",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user",
+                "operationId": "ecb974a916217fb61347afdb7cfdbe36",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "SuccessResponse": {
+                "description": "Standard success envelope",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Operation successful"
+                    },
+                    "data": {
+                        "description": "The response payload"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "description": "Standard error envelope",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Validation failed"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 75
+                    }
+                },
+                "type": "object"
+            },
+            "Gudang": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "kode": {
+                        "type": "string",
+                        "example": "GDG001"
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Gudang Utama"
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "pic": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Barang": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sku": {
+                        "type": "string",
+                        "example": "BRG001"
+                    },
+                    "barcode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Semen 50kg"
+                    },
+                    "kategori_id": {
+                        "type": "integer"
+                    },
+                    "satuan_id": {
+                        "type": "integer"
+                    },
+                    "min_stok": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "max_stok": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "berat": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "foto": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "harga_beli": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "harga_jual": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "deskripsi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Kategori": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "parent_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Material Bangunan"
+                    },
+                    "deskripsi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Supplier": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "kode": {
+                        "type": "string",
+                        "example": "SPL001"
+                    },
+                    "tipe": {
+                        "type": "string",
+                        "enum": [
+                            "perusahaan",
+                            "pribadi"
+                        ]
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "PT Supplier Makmur"
+                    },
+                    "kontak": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "npwp": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Customer": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "kode": {
+                        "type": "string",
+                        "example": "CST001"
+                    },
+                    "tipe": {
+                        "type": "string",
+                        "enum": [
+                            "perusahaan",
+                            "pribadi"
+                        ]
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "PT Customer Sejahtera"
+                    },
+                    "kontak": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "npwp": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "BarangMasuk": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "BM001"
+                    },
+                    "nomor_surat_jalan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "supplier_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "partial"
+                        ]
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "dokumen": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "BarangKeluar": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "BK001"
+                    },
+                    "nomor_surat_jalan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "customer_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "delivered",
+                            "partial"
+                        ]
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "delivered_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "delivered_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "dokumen": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MutasiStok": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "MS001"
+                    },
+                    "barang_id": {
+                        "type": "integer"
+                    },
+                    "gudang_asal_id": {
+                        "type": "integer"
+                    },
+                    "gudang_tujuan_id": {
+                        "type": "integer"
+                    },
+                    "lokasi_rak_asal_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "lokasi_rak_tujuan_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "qty": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "completed"
+                        ]
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StokOpname": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "SO001"
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ]
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Absensi": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "shift_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "jam_masuk": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "jam_pulang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "hadir",
+                            "izin",
+                            "sakit",
+                            "alpha",
+                            "cuti",
+                            "terlambat"
+                        ]
+                    },
+                    "lokasi_checkin": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lokasi_checkout": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "radius_validasi": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "foto_masuk": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "foto_pulang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Shift": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Shift Pagi"
+                    },
+                    "jam_masuk": {
+                        "type": "string",
+                        "example": "07:00"
+                    },
+                    "jam_pulang": {
+                        "type": "string",
+                        "example": "15:00"
+                    },
+                    "toleransi_masuk": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "toleransi_pulang": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Admin"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "admin@example.com"
+                    },
+                    "gudang_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "no_pegawai": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "foto": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "last_login_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Role": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "guard_name": {
+                        "type": "string",
+                        "example": "web"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "New User"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "StoreGudangRequest": {
+                "required": [
+                    "kode",
+                    "nama"
+                ],
+                "properties": {
+                    "kode": {
+                        "type": "string",
+                        "example": "GDG001"
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Gudang Utama"
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "pic": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "aktif",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StoreBarangRequest": {
+                "required": [
+                    "sku",
+                    "nama",
+                    "kategori_id",
+                    "satuan_id"
+                ],
+                "properties": {
+                    "sku": {
+                        "type": "string",
+                        "example": "BRG001"
+                    },
+                    "barcode": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Semen 50kg"
+                    },
+                    "kategori_id": {
+                        "type": "integer"
+                    },
+                    "satuan_id": {
+                        "type": "integer"
+                    },
+                    "min_stok": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "max_stok": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "berat": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "foto": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "harga_beli": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "harga_jual": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "deskripsi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "aktif",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StoreKategoriRequest": {
+                "required": [
+                    "nama"
+                ],
+                "properties": {
+                    "parent_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "Material Bangunan"
+                    },
+                    "deskripsi": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreSupplierRequest": {
+                "required": [
+                    "kode",
+                    "tipe",
+                    "nama"
+                ],
+                "properties": {
+                    "kode": {
+                        "type": "string",
+                        "example": "SPL001"
+                    },
+                    "tipe": {
+                        "type": "string",
+                        "enum": [
+                            "perusahaan",
+                            "pribadi"
+                        ]
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "PT Supplier Makmur"
+                    },
+                    "kontak": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "npwp": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreCustomerRequest": {
+                "required": [
+                    "kode",
+                    "tipe",
+                    "nama"
+                ],
+                "properties": {
+                    "kode": {
+                        "type": "string",
+                        "example": "CST001"
+                    },
+                    "tipe": {
+                        "type": "string",
+                        "enum": [
+                            "perusahaan",
+                            "pribadi"
+                        ]
+                    },
+                    "nama": {
+                        "type": "string",
+                        "example": "PT Customer Sejahtera"
+                    },
+                    "kontak": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "npwp": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreBarangMasukRequest": {
+                "required": [
+                    "no_referensi",
+                    "gudang_id",
+                    "supplier_id",
+                    "tanggal"
+                ],
+                "properties": {
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "BM001"
+                    },
+                    "nomor_surat_jalan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "supplier_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "pending",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "partial"
+                        ]
+                    },
+                    "dokumen": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreBarangKeluarRequest": {
+                "required": [
+                    "no_referensi",
+                    "gudang_id",
+                    "customer_id",
+                    "tanggal"
+                ],
+                "properties": {
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "BK001"
+                    },
+                    "nomor_surat_jalan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "customer_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "pending",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "delivered",
+                            "partial"
+                        ]
+                    },
+                    "dokumen": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreMutasiStokRequest": {
+                "required": [
+                    "no_referensi",
+                    "barang_id",
+                    "gudang_asal_id",
+                    "gudang_tujuan_id",
+                    "qty",
+                    "tanggal"
+                ],
+                "properties": {
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "MS001"
+                    },
+                    "barang_id": {
+                        "type": "integer"
+                    },
+                    "gudang_asal_id": {
+                        "type": "integer"
+                    },
+                    "gudang_tujuan_id": {
+                        "type": "integer"
+                    },
+                    "lokasi_rak_asal_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "lokasi_rak_tujuan_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "qty": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "pending",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "completed"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StoreStokOpnameRequest": {
+                "required": [
+                    "no_referensi",
+                    "gudang_id",
+                    "tanggal"
+                ],
+                "properties": {
+                    "no_referensi": {
+                        "type": "string",
+                        "example": "SO001"
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "draft",
+                        "enum": [
+                            "draft",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StoreAbsensiRequest": {
+                "required": [
+                    "user_id",
+                    "gudang_id",
+                    "shift_id",
+                    "tanggal",
+                    "status"
+                ],
+                "properties": {
+                    "user_id": {
+                        "type": "integer"
+                    },
+                    "gudang_id": {
+                        "type": "integer"
+                    },
+                    "shift_id": {
+                        "type": "integer"
+                    },
+                    "tanggal": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "jam_masuk": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "jam_pulang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "hadir",
+                            "izin",
+                            "sakit",
+                            "alpha",
+                            "cuti",
+                            "terlambat"
+                        ]
+                    },
+                    "lokasi_checkin": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lokasi_checkout": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "radius_validasi": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "foto_masuk": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "foto_pulang": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "keterangan": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreShiftRequest": {
+                "required": [
+                    "nama",
+                    "jam_masuk",
+                    "jam_pulang"
+                ],
+                "properties": {
+                    "nama": {
+                        "type": "string",
+                        "example": "Shift Pagi"
+                    },
+                    "jam_masuk": {
+                        "type": "string",
+                        "example": "07:00"
+                    },
+                    "jam_pulang": {
+                        "type": "string",
+                        "example": "15:00"
+                    },
+                    "toleransi_masuk": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "toleransi_pulang": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "aktif",
+                        "enum": [
+                            "aktif",
+                            "nonaktif"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "StoreUserRequest": {
+                "required": [
+                    "name",
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Staff Gudang"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "staff@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "password"
+                    },
+                    "gudang_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "no_pegawai": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telepon": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "foto": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "StoreRoleRequest": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "manager"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "Passport",
+                "description": "Enter Bearer token obtained from login endpoint"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Absensi",
+            "description": "Attendance CRUD"
+        },
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints (login, register, logout)"
+        },
+        {
+            "name": "Barang",
+            "description": "Item/Product CRUD & export"
+        },
+        {
+            "name": "Barang Keluar",
+            "description": "Outbound goods CRUD, export & print surat jalan"
+        },
+        {
+            "name": "Barang Masuk",
+            "description": "Inbound goods CRUD, export & print surat jalan"
+        },
+        {
+            "name": "Customer",
+            "description": "Customer CRUD"
+        },
+        {
+            "name": "Gudang",
+            "description": "Warehouse CRUD"
+        },
+        {
+            "name": "Kategori",
+            "description": "Category CRUD"
+        },
+        {
+            "name": "Laporan",
+            "description": "Reports (stock, inbound, outbound, mutation, opname, attendance)"
+        },
+        {
+            "name": "Mutasi Stok",
+            "description": "Stock transfer CRUD"
+        },
+        {
+            "name": "Role",
+            "description": "Role & permission management CRUD"
+        },
+        {
+            "name": "Shift",
+            "description": "Shift CRUD"
+        },
+        {
+            "name": "Stok Opname",
+            "description": "Stock opname CRUD"
+        },
+        {
+            "name": "Supplier",
+            "description": "Supplier CRUD"
+        },
+        {
+            "name": "User",
+            "description": "User management CRUD"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}
