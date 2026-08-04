@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Supplier;
+
 class SupplierTest extends ApiTestCase
 {
     public function test_index_supplier()
@@ -27,7 +29,7 @@ class SupplierTest extends ApiTestCase
     public function test_show_supplier()
     {
         $this->actingAsAdmin();
-        $supplier = \App\Models\Supplier::factory()->create();
+        $supplier = Supplier::factory()->create();
         $response = $this->getJson("/api/supplier/{$supplier->id}");
         $response->assertOk();
     }
@@ -35,7 +37,7 @@ class SupplierTest extends ApiTestCase
     public function test_update_supplier()
     {
         $this->actingAsAdmin();
-        $supplier = \App\Models\Supplier::factory()->create();
+        $supplier = Supplier::factory()->create();
         $response = $this->putJson("/api/supplier/{$supplier->id}", [
             'nama' => 'PT Supplier Updated',
         ]);
@@ -46,9 +48,10 @@ class SupplierTest extends ApiTestCase
     public function test_destroy_supplier()
     {
         $this->actingAsAdmin();
-        $supplier = \App\Models\Supplier::factory()->create();
+        $supplier = Supplier::factory()->create();
         $response = $this->deleteJson("/api/supplier/{$supplier->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

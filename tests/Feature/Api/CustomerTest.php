@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Customer;
+
 class CustomerTest extends ApiTestCase
 {
     public function test_index_customer()
@@ -27,7 +29,7 @@ class CustomerTest extends ApiTestCase
     public function test_show_customer()
     {
         $this->actingAsAdmin();
-        $customer = \App\Models\Customer::factory()->create();
+        $customer = Customer::factory()->create();
         $response = $this->getJson("/api/customer/{$customer->id}");
         $response->assertOk();
     }
@@ -35,7 +37,7 @@ class CustomerTest extends ApiTestCase
     public function test_update_customer()
     {
         $this->actingAsAdmin();
-        $customer = \App\Models\Customer::factory()->create();
+        $customer = Customer::factory()->create();
         $response = $this->putJson("/api/customer/{$customer->id}", [
             'nama' => 'PT Customer Updated',
         ]);
@@ -46,9 +48,10 @@ class CustomerTest extends ApiTestCase
     public function test_destroy_customer()
     {
         $this->actingAsAdmin();
-        $customer = \App\Models\Customer::factory()->create();
+        $customer = Customer::factory()->create();
         $response = $this->deleteJson("/api/customer/{$customer->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

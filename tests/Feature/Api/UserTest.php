@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\User;
+
 class UserTest extends ApiTestCase
 {
     public function test_index_user()
@@ -27,7 +29,7 @@ class UserTest extends ApiTestCase
     public function test_show_user()
     {
         $this->actingAsAdmin();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $response = $this->getJson("/api/user/{$user->id}");
         $response->assertOk();
     }
@@ -35,7 +37,7 @@ class UserTest extends ApiTestCase
     public function test_update_user()
     {
         $this->actingAsAdmin();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $response = $this->putJson("/api/user/{$user->id}", [
             'name' => 'User Updated',
         ]);
@@ -46,9 +48,10 @@ class UserTest extends ApiTestCase
     public function test_destroy_user()
     {
         $this->actingAsAdmin();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $response = $this->deleteJson("/api/user/{$user->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

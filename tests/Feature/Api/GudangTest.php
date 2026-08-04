@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Gudang;
+
 class GudangTest extends ApiTestCase
 {
     public function test_index_gudang()
@@ -27,7 +29,7 @@ class GudangTest extends ApiTestCase
     public function test_show_gudang()
     {
         $this->actingAsAdmin();
-        $gudang = \App\Models\Gudang::factory()->create();
+        $gudang = Gudang::factory()->create();
         $response = $this->getJson("/api/gudang/{$gudang->id}");
         $response->assertOk();
     }
@@ -35,7 +37,7 @@ class GudangTest extends ApiTestCase
     public function test_update_gudang()
     {
         $this->actingAsAdmin();
-        $gudang = \App\Models\Gudang::factory()->create();
+        $gudang = Gudang::factory()->create();
         $response = $this->putJson("/api/gudang/{$gudang->id}", [
             'nama' => 'Gudang Updated',
         ]);
@@ -46,9 +48,10 @@ class GudangTest extends ApiTestCase
     public function test_destroy_gudang()
     {
         $this->actingAsAdmin();
-        $gudang = \App\Models\Gudang::factory()->create();
+        $gudang = Gudang::factory()->create();
         $response = $this->deleteJson("/api/gudang/{$gudang->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use Spatie\Permission\Models\Role;
+
 class RoleTest extends ApiTestCase
 {
     public function test_index_role()
@@ -25,7 +27,7 @@ class RoleTest extends ApiTestCase
     public function test_show_role()
     {
         $this->actingAsAdmin();
-        $role = \Spatie\Permission\Models\Role::create(['name' => 'test-role']);
+        $role = Role::create(['name' => 'test-role']);
         $response = $this->getJson("/api/role/{$role->id}");
         $response->assertOk();
     }
@@ -33,7 +35,7 @@ class RoleTest extends ApiTestCase
     public function test_update_role()
     {
         $this->actingAsAdmin();
-        $role = \Spatie\Permission\Models\Role::create(['name' => 'test-role']);
+        $role = Role::create(['name' => 'test-role']);
         $response = $this->putJson("/api/role/{$role->id}", [
             'name' => 'manager-updated',
         ]);
@@ -44,9 +46,10 @@ class RoleTest extends ApiTestCase
     public function test_destroy_role()
     {
         $this->actingAsAdmin();
-        $role = \Spatie\Permission\Models\Role::create(['name' => 'test-role']);
+        $role = Role::create(['name' => 'test-role']);
         $response = $this->deleteJson("/api/role/{$role->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

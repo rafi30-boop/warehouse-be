@@ -34,6 +34,15 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'User', description: 'User management CRUD')]
 #[OA\Tag(name: 'Role', description: 'Role & permission management CRUD')]
 #[OA\Tag(name: 'Laporan', description: 'Reports (stock, inbound, outbound, mutation, opname, attendance)')]
+#[OA\Tag(name: 'Satuan', description: 'Unit of measure CRUD')]
+#[OA\Tag(name: 'Lokasi Rak', description: 'Rack location CRUD')]
+#[OA\Tag(name: 'Kartu Stok', description: 'Stock card history')]
+#[OA\Tag(name: 'Notifikasi', description: 'User notifications')]
+#[OA\Tag(name: 'Aktivitas Log', description: 'Activity audit log')]
+#[OA\Tag(name: 'Batch Barang', description: 'Item batch/expiry CRUD')]
+#[OA\Tag(name: 'History Harga', description: 'Price history')]
+#[OA\Tag(name: 'Jadwal Petugas', description: 'Staff schedule CRUD')]
+#[OA\Tag(name: 'Upload', description: 'File upload')]
 #[OA\SecurityScheme(
     securityScheme: 'bearerAuth',
     type: 'http',
@@ -41,9 +50,7 @@ use OpenApi\Attributes as OA;
     bearerFormat: 'Passport',
     description: 'Enter Bearer token obtained from POST /api/login'
 )]
-class OpenApi
-{
-}
+class OpenApi {}
 
 // ──────────────────────────────────────────────────────────
 // Schemas
@@ -182,7 +189,7 @@ class CustomerSchema {}
         new OA\Property(property: 'supplier_id', type: 'integer'),
         new OA\Property(property: 'tanggal', type: 'string', format: 'date'),
         new OA\Property(property: 'keterangan', type: 'string', nullable: true),
-        new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected', 'partial']),
+        new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected']),
         new OA\Property(property: 'created_by', type: 'integer', nullable: true),
         new OA\Property(property: 'approved_by', type: 'integer', nullable: true),
         new OA\Property(property: 'approved_at', type: 'string', format: 'date-time', nullable: true),
@@ -299,17 +306,31 @@ class AbsensiSchema {}
 class ShiftSchema {}
 
 #[OA\Schema(
+    schema: 'Permission',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'name', type: 'string', example: 'barang-list'),
+        new OA\Property(property: 'guard_name', type: 'string', example: 'web'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class PermissionSchema {}
+
+#[OA\Schema(
     schema: 'User',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'name', type: 'string', example: 'Admin'),
         new OA\Property(property: 'email', type: 'string', example: 'admin@example.com'),
-        new OA\Property(property: 'gudang_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'gudang_id', type: 'integer', nullable: true, example: null),
         new OA\Property(property: 'no_pegawai', type: 'string', nullable: true),
         new OA\Property(property: 'telepon', type: 'string', nullable: true),
         new OA\Property(property: 'foto', type: 'string', nullable: true),
         new OA\Property(property: 'is_active', type: 'boolean'),
         new OA\Property(property: 'last_login_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(ref: '#/components/schemas/Role'), nullable: true),
+        new OA\Property(property: 'gudang', ref: '#/components/schemas/Gudang', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
     ],
@@ -322,6 +343,7 @@ class UserSchema {}
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'name', type: 'string', example: 'admin'),
         new OA\Property(property: 'guard_name', type: 'string', example: 'web'),
+        new OA\Property(property: 'permissions', type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission'), nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
     ],
@@ -440,8 +462,16 @@ class StoreCustomerRequestSchema {}
         new OA\Property(property: 'supplier_id', type: 'integer'),
         new OA\Property(property: 'tanggal', type: 'string', format: 'date'),
         new OA\Property(property: 'keterangan', type: 'string', nullable: true),
-        new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected', 'partial'], default: 'pending'),
+        new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected'], default: 'pending'),
         new OA\Property(property: 'dokumen', type: 'string', nullable: true),
+        new OA\Property(property: 'details', type: 'array', description: 'Detail barang masuk', nullable: true, items: new OA\Items(properties: [
+            new OA\Property(property: 'barang_id', type: 'integer'),
+            new OA\Property(property: 'lokasi_rak_id', type: 'integer', nullable: true),
+            new OA\Property(property: 'qty', type: 'number', format: 'float', example: 10),
+            new OA\Property(property: 'harga_satuan', type: 'number', format: 'float', nullable: true),
+            new OA\Property(property: 'diskon', type: 'number', format: 'float', nullable: true),
+            new OA\Property(property: 'pajak', type: 'number', format: 'float', nullable: true),
+        ])),
     ],
 )]
 class StoreBarangMasukRequestSchema {}
@@ -458,6 +488,14 @@ class StoreBarangMasukRequestSchema {}
         new OA\Property(property: 'keterangan', type: 'string', nullable: true),
         new OA\Property(property: 'status', type: 'string', enum: ['pending', 'approved', 'rejected', 'delivered', 'partial'], default: 'pending'),
         new OA\Property(property: 'dokumen', type: 'string', nullable: true),
+        new OA\Property(property: 'details', type: 'array', description: 'Detail barang keluar', nullable: true, items: new OA\Items(properties: [
+            new OA\Property(property: 'barang_id', type: 'integer'),
+            new OA\Property(property: 'lokasi_rak_id', type: 'integer', nullable: true),
+            new OA\Property(property: 'qty', type: 'number', format: 'float', example: 5),
+            new OA\Property(property: 'harga_satuan', type: 'number', format: 'float', nullable: true),
+            new OA\Property(property: 'diskon', type: 'number', format: 'float', nullable: true),
+            new OA\Property(property: 'pajak', type: 'number', format: 'float', nullable: true),
+        ])),
     ],
 )]
 class StoreBarangKeluarRequestSchema {}
@@ -489,6 +527,12 @@ class StoreMutasiStokRequestSchema {}
         new OA\Property(property: 'tanggal', type: 'string', format: 'date'),
         new OA\Property(property: 'keterangan', type: 'string', nullable: true),
         new OA\Property(property: 'status', type: 'string', enum: ['draft', 'in_progress', 'completed', 'cancelled'], default: 'draft'),
+        new OA\Property(property: 'details', type: 'array', description: 'Detail stok opname', nullable: true, items: new OA\Items(properties: [
+            new OA\Property(property: 'barang_id', type: 'integer'),
+            new OA\Property(property: 'lokasi_rak_id', type: 'integer', nullable: true),
+            new OA\Property(property: 'stok_fisik', type: 'number', format: 'float', example: 9),
+            new OA\Property(property: 'keterangan', type: 'string', nullable: true),
+        ])),
     ],
 )]
 class StoreStokOpnameRequestSchema {}
@@ -554,3 +598,180 @@ class StoreUserRequestSchema {}
     ],
 )]
 class StoreRoleRequestSchema {}
+
+#[OA\Schema(
+    schema: 'Satuan',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'nama', type: 'string', example: 'Kilogram'),
+        new OA\Property(property: 'singkatan', type: 'string', example: 'kg'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class SatuanSchema {}
+
+#[OA\Schema(
+    schema: 'LokasiRak',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'gudang_id', type: 'integer'),
+        new OA\Property(property: 'kode_rak', type: 'string', example: 'RAK-A1'),
+        new OA\Property(property: 'zona', type: 'string', nullable: true),
+        new OA\Property(property: 'kapasitas', type: 'integer', nullable: true),
+        new OA\Property(property: 'deskripsi', type: 'string', nullable: true),
+        new OA\Property(property: 'status', type: 'string', enum: ['aktif', 'nonaktif', 'penuh']),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class LokasiRakSchema {}
+
+#[OA\Schema(
+    schema: 'KartuStok',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'barang_id', type: 'integer'),
+        new OA\Property(property: 'gudang_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'lokasi_rak_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'tipe', type: 'string', enum: ['in', 'out', 'mutasi_in', 'mutasi_out', 'opname']),
+        new OA\Property(property: 'qty', type: 'number', format: 'float'),
+        new OA\Property(property: 'saldo_sebelum', type: 'number', format: 'float'),
+        new OA\Property(property: 'saldo_sesudah', type: 'number', format: 'float'),
+        new OA\Property(property: 'referensi_type', type: 'string', nullable: true),
+        new OA\Property(property: 'referensi_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'keterangan', type: 'string', nullable: true),
+        new OA\Property(property: 'created_by', type: 'integer', nullable: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class KartuStokSchema {}
+
+#[OA\Schema(
+    schema: 'Notifikasi',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'user_id', type: 'integer'),
+        new OA\Property(property: 'judul', type: 'string'),
+        new OA\Property(property: 'pesan', type: 'string'),
+        new OA\Property(property: 'tipe', type: 'string', nullable: true),
+        new OA\Property(property: 'priority', type: 'string', nullable: true),
+        new OA\Property(property: 'link', type: 'string', nullable: true),
+        new OA\Property(property: 'is_read', type: 'boolean', default: false),
+        new OA\Property(property: 'read_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class NotifikasiSchema {}
+
+#[OA\Schema(
+    schema: 'AktivitasLog',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'user_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'ip_address', type: 'string', nullable: true),
+        new OA\Property(property: 'user_agent', type: 'string', nullable: true),
+        new OA\Property(property: 'url', type: 'string', nullable: true),
+        new OA\Property(property: 'method', type: 'string', nullable: true),
+        new OA\Property(property: 'action', type: 'string'),
+        new OA\Property(property: 'model', type: 'string', nullable: true),
+        new OA\Property(property: 'model_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'data_old', type: 'object', nullable: true),
+        new OA\Property(property: 'data_new', type: 'object', nullable: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class AktivitasLogSchema {}
+
+#[OA\Schema(
+    schema: 'BatchBarang',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'barang_id', type: 'integer'),
+        new OA\Property(property: 'batch_number', type: 'string', example: 'BATCH-001'),
+        new OA\Property(property: 'expired_date', type: 'string', format: 'date', nullable: true),
+        new OA\Property(property: 'qty', type: 'number', format: 'float'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class BatchBarangSchema {}
+
+#[OA\Schema(
+    schema: 'HistoryHarga',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'barang_id', type: 'integer'),
+        new OA\Property(property: 'harga_beli', type: 'number', format: 'float', nullable: true),
+        new OA\Property(property: 'harga_jual', type: 'number', format: 'float', nullable: true),
+        new OA\Property(property: 'tanggal_efektif', type: 'string', format: 'date'),
+        new OA\Property(property: 'created_by', type: 'integer', nullable: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class HistoryHargaSchema {}
+
+#[OA\Schema(
+    schema: 'JadwalPetugas',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'user_id', type: 'integer'),
+        new OA\Property(property: 'shift_id', type: 'integer'),
+        new OA\Property(property: 'tanggal', type: 'string', format: 'date'),
+        new OA\Property(property: 'created_by', type: 'integer', nullable: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', nullable: true),
+    ],
+)]
+class JadwalPetugasSchema {}
+
+#[OA\Schema(
+    schema: 'StoreSatuanRequest',
+    required: ['nama', 'singkatan'],
+    properties: [
+        new OA\Property(property: 'nama', type: 'string', example: 'Kilogram'),
+        new OA\Property(property: 'singkatan', type: 'string', example: 'kg'),
+    ],
+)]
+class StoreSatuanRequestSchema {}
+
+#[OA\Schema(
+    schema: 'StoreLokasiRakRequest',
+    required: ['gudang_id', 'kode_rak'],
+    properties: [
+        new OA\Property(property: 'gudang_id', type: 'integer'),
+        new OA\Property(property: 'kode_rak', type: 'string', example: 'RAK-A1'),
+        new OA\Property(property: 'zona', type: 'string', nullable: true),
+        new OA\Property(property: 'kapasitas', type: 'integer', nullable: true),
+        new OA\Property(property: 'deskripsi', type: 'string', nullable: true),
+        new OA\Property(property: 'status', type: 'string', enum: ['aktif', 'nonaktif', 'penuh'], default: 'aktif'),
+    ],
+)]
+class StoreLokasiRakRequestSchema {}
+
+#[OA\Schema(
+    schema: 'StoreBatchBarangRequest',
+    required: ['barang_id', 'batch_number'],
+    properties: [
+        new OA\Property(property: 'barang_id', type: 'integer'),
+        new OA\Property(property: 'batch_number', type: 'string', example: 'BATCH-001'),
+        new OA\Property(property: 'expired_date', type: 'string', format: 'date', nullable: true),
+        new OA\Property(property: 'qty', type: 'number', format: 'float', nullable: true),
+    ],
+)]
+class StoreBatchBarangRequestSchema {}
+
+#[OA\Schema(
+    schema: 'StoreJadwalPetugasRequest',
+    required: ['user_id', 'shift_id', 'tanggal'],
+    properties: [
+        new OA\Property(property: 'user_id', type: 'integer'),
+        new OA\Property(property: 'shift_id', type: 'integer'),
+        new OA\Property(property: 'tanggal', type: 'string', format: 'date'),
+    ],
+)]
+class StoreJadwalPetugasRequestSchema {}

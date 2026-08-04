@@ -2,6 +2,10 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Barang;
+use App\Models\Kategori;
+use App\Models\Satuan;
+
 class BarangTest extends ApiTestCase
 {
     public function test_index_barang()
@@ -14,8 +18,8 @@ class BarangTest extends ApiTestCase
     public function test_store_barang()
     {
         $this->actingAsAdmin();
-        $kategori = \App\Models\Kategori::factory()->create();
-        $satuan = \App\Models\Satuan::factory()->create();
+        $kategori = Kategori::factory()->create();
+        $satuan = Satuan::factory()->create();
 
         $response = $this->postJson('/api/barang', [
             'sku' => 'BRG001',
@@ -33,7 +37,7 @@ class BarangTest extends ApiTestCase
     public function test_show_barang()
     {
         $this->actingAsAdmin();
-        $barang = \App\Models\Barang::factory()->create();
+        $barang = Barang::factory()->create();
         $response = $this->getJson("/api/barang/{$barang->id}");
         $response->assertOk();
     }
@@ -41,7 +45,7 @@ class BarangTest extends ApiTestCase
     public function test_update_barang()
     {
         $this->actingAsAdmin();
-        $barang = \App\Models\Barang::factory()->create();
+        $barang = Barang::factory()->create();
         $response = $this->putJson("/api/barang/{$barang->id}", [
             'nama' => 'Barang Updated',
         ]);
@@ -52,15 +56,16 @@ class BarangTest extends ApiTestCase
     public function test_destroy_barang()
     {
         $this->actingAsAdmin();
-        $barang = \App\Models\Barang::factory()->create();
+        $barang = Barang::factory()->create();
         $response = $this->deleteJson("/api/barang/{$barang->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_export_excel_barang()
     {
         $this->actingAsAdmin();
-        \App\Models\Barang::factory()->count(3)->create();
+        Barang::factory()->count(3)->create();
         $response = $this->getJson('/api/barang/export/excel');
         $response->assertOk();
     }

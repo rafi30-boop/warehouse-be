@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use OpenApi\Attributes as OA;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use OpenApi\Attributes as OA;
 use Spatie\Permission\Models\Role;
 
 #[OA\Tag(name: 'Auth')]
 class AuthController extends Controller
 {
+    use ApiResponse;
+
     #[OA\Post(
         path: '/api/login',
         summary: 'Login user',
@@ -26,7 +28,7 @@ class AuthController extends Controller
                 new OA\Property(property: 'success', type: 'boolean', example: true),
                 new OA\Property(property: 'message', type: 'string', example: 'Login berhasil'),
                 new OA\Property(property: 'data', properties: [
-                    new OA\Property(property: 'token', type: 'string'),
+                    new OA\Property(property: 'token', type: 'string', description: 'Bearer access token'),
                     new OA\Property(property: 'user', ref: '#/components/schemas/User'),
                 ], type: 'object'),
             ])),
@@ -43,26 +45,22 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return $this->error('Email atau password salah', 401);
         }
 
-        if (!$user->is_active) {
-            throw ValidationException::withMessages([
-                'email' => ['Your account has been deactivated.'],
-            ]);
+        if (! $user->is_active) {
+            return $this->error('Akun Anda telah dinonaktifkan', 403);
         }
 
         $user->update(['last_login_at' => now()]);
 
         $token = $user->createToken('api-token')->accessToken;
 
-        return response()->json([
+        return $this->success([
             'user' => $user->load(['roles', 'gudang']),
             'token' => $token,
-        ]);
+        ], 'Login berhasil');
     }
 
     #[OA\Post(
@@ -78,7 +76,7 @@ class AuthController extends Controller
                 new OA\Property(property: 'success', type: 'boolean', example: true),
                 new OA\Property(property: 'message', type: 'string', example: 'Registrasi berhasil'),
                 new OA\Property(property: 'data', properties: [
-                    new OA\Property(property: 'token', type: 'string'),
+                    new OA\Property(property: 'token', type: 'string', description: 'Bearer access token'),
                     new OA\Property(property: 'user', ref: '#/components/schemas/User'),
                 ], type: 'object'),
             ])),
@@ -103,10 +101,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->accessToken;
 
-        return response()->json([
+        return $this->success([
             'user' => $user->load(['roles', 'gudang']),
             'token' => $token,
-        ], 201);
+        ], 'Registrasi berhasil', 201);
     }
 
     #[OA\Get(
@@ -117,6 +115,7 @@ class AuthController extends Controller
         responses: [
             new OA\Response(response: 200, description: 'Current user data', content: new OA\JsonContent(properties: [
                 new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Data user berhasil dimuat'),
                 new OA\Property(property: 'data', ref: '#/components/schemas/User'),
             ])),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
@@ -124,7 +123,7 @@ class AuthController extends Controller
     )]
     public function me(Request $request)
     {
-        return response()->json($request->user()->load(['roles.permissions', 'gudang']));
+        return $this->success($request->user()->load(['roles.permissions', 'gudang']), 'Data user berhasil dimuat');
     }
 
     #[OA\Post(
@@ -133,7 +132,11 @@ class AuthController extends Controller
         tags: ['Auth'],
         security: [['bearerAuth' => []]],
         responses: [
-            new OA\Response(response: 200, description: 'Logout success'),
+            new OA\Response(response: 200, description: 'Logout success', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Logout berhasil'),
+                new OA\Property(property: 'data', type: 'null', example: null),
+            ])),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
@@ -141,6 +144,31 @@ class AuthController extends Controller
     {
         $request->user()->token()->revoke();
 
-        return response()->json(['message' => 'Logged out successfully']);
+        return $this->success(null, 'Logout berhasil');
+    }
+
+    #[OA\Post(
+        path: '/api/refresh',
+        summary: 'Refresh access token (issue new token, revoke current)',
+        tags: ['Auth'],
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'New token issued', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Token berhasil diperbarui'),
+                new OA\Property(property: 'data', properties: [
+                    new OA\Property(property: 'token', type: 'string', description: 'New bearer access token'),
+                ], type: 'object'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ]
+    )]
+    public function refresh(Request $request)
+    {
+        $request->user()->token()->revoke();
+
+        $token = $request->user()->createToken('api-token')->accessToken;
+
+        return $this->success(['token' => $token], 'Token berhasil diperbarui');
     }
 }

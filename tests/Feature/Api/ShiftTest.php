@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Shift;
+
 class ShiftTest extends ApiTestCase
 {
     public function test_index_shift()
@@ -27,7 +29,7 @@ class ShiftTest extends ApiTestCase
     public function test_show_shift()
     {
         $this->actingAsAdmin();
-        $shift = \App\Models\Shift::factory()->create();
+        $shift = Shift::factory()->create();
         $response = $this->getJson("/api/shift/{$shift->id}");
         $response->assertOk();
     }
@@ -35,7 +37,7 @@ class ShiftTest extends ApiTestCase
     public function test_update_shift()
     {
         $this->actingAsAdmin();
-        $shift = \App\Models\Shift::factory()->create();
+        $shift = Shift::factory()->create();
         $response = $this->putJson("/api/shift/{$shift->id}", [
             'nama' => 'Shift Siang',
         ]);
@@ -46,9 +48,10 @@ class ShiftTest extends ApiTestCase
     public function test_destroy_shift()
     {
         $this->actingAsAdmin();
-        $shift = \App\Models\Shift::factory()->create();
+        $shift = Shift::factory()->create();
         $response = $this->deleteJson("/api/shift/{$shift->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

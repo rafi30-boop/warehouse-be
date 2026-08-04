@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Kategori;
+
 class KategoriTest extends ApiTestCase
 {
     public function test_index_kategori()
@@ -25,7 +27,7 @@ class KategoriTest extends ApiTestCase
     public function test_show_kategori()
     {
         $this->actingAsAdmin();
-        $kategori = \App\Models\Kategori::factory()->create();
+        $kategori = Kategori::factory()->create();
         $response = $this->getJson("/api/kategori/{$kategori->id}");
         $response->assertOk();
     }
@@ -33,7 +35,7 @@ class KategoriTest extends ApiTestCase
     public function test_update_kategori()
     {
         $this->actingAsAdmin();
-        $kategori = \App\Models\Kategori::factory()->create();
+        $kategori = Kategori::factory()->create();
         $response = $this->putJson("/api/kategori/{$kategori->id}", [
             'nama' => 'Elektronik Updated',
         ]);
@@ -44,9 +46,10 @@ class KategoriTest extends ApiTestCase
     public function test_destroy_kategori()
     {
         $this->actingAsAdmin();
-        $kategori = \App\Models\Kategori::factory()->create();
+        $kategori = Kategori::factory()->create();
         $response = $this->deleteJson("/api/kategori/{$kategori->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

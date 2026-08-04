@@ -2,6 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Absensi;
+use App\Models\Gudang;
+use App\Models\Shift;
+use App\Models\User;
+
 class AbsensiTest extends ApiTestCase
 {
     public function test_index_absensi()
@@ -14,9 +19,9 @@ class AbsensiTest extends ApiTestCase
     public function test_store_absensi()
     {
         $this->actingAsAdmin();
-        $user = \App\Models\User::factory()->create();
-        $gudang = \App\Models\Gudang::factory()->create();
-        $shift = \App\Models\Shift::factory()->create();
+        $user = User::factory()->create();
+        $gudang = Gudang::factory()->create();
+        $shift = Shift::factory()->create();
 
         $response = $this->postJson('/api/absensi', [
             'user_id' => $user->id,
@@ -33,7 +38,7 @@ class AbsensiTest extends ApiTestCase
     public function test_show_absensi()
     {
         $this->actingAsAdmin();
-        $absensi = \App\Models\Absensi::factory()->create();
+        $absensi = Absensi::factory()->create();
         $response = $this->getJson("/api/absensi/{$absensi->id}");
         $response->assertOk();
     }
@@ -41,7 +46,7 @@ class AbsensiTest extends ApiTestCase
     public function test_update_absensi()
     {
         $this->actingAsAdmin();
-        $absensi = \App\Models\Absensi::factory()->create();
+        $absensi = Absensi::factory()->create();
         $response = $this->putJson("/api/absensi/{$absensi->id}", [
             'jam_pulang' => '15:00',
         ]);
@@ -52,9 +57,10 @@ class AbsensiTest extends ApiTestCase
     public function test_destroy_absensi()
     {
         $this->actingAsAdmin();
-        $absensi = \App\Models\Absensi::factory()->create();
+        $absensi = Absensi::factory()->create();
         $response = $this->deleteJson("/api/absensi/{$absensi->id}");
-        $response->assertNoContent();
+        $response->assertOk()
+            ->assertJson(['success' => true, 'data' => null]);
     }
 
     public function test_store_validation_error()

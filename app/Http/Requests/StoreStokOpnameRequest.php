@@ -19,6 +19,11 @@ class StoreStokOpnameRequest extends FormRequest
             'tanggal' => 'required|date',
             'keterangan' => 'nullable|string',
             'status' => 'in:draft,in_progress,completed,cancelled',
+            'details' => 'nullable|array|min:1',
+            'details.*.barang_id' => 'required|exists:barang,id',
+            'details.*.lokasi_rak_id' => 'nullable|exists:lokasi_rak,id',
+            'details.*.stok_fisik' => 'required|numeric|min:0',
+            'details.*.keterangan' => 'nullable|string',
         ];
     }
 }

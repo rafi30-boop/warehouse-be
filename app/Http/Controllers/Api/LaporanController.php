@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use OpenApi\Attributes as OA;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AbsensiResource;
 use App\Http\Resources\BarangKeluarResource;
@@ -16,11 +15,16 @@ use App\Models\BarangMasuk;
 use App\Models\MutasiStok;
 use App\Models\StokOpname;
 use App\Services\StokService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Laporan')]
 class LaporanController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(private StokService $stokService)
     {
         $this->middleware('permission:laporan-stok', ['only' => ['stok']]);
@@ -39,10 +43,29 @@ class LaporanController extends Controller
         parameters: [
             new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'kategori_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['aktif', 'nonaktif'])),
+            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string', description: 'Search by nama or sku')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Stok report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Stok report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan stok berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(properties: [
+                    new OA\Property(property: 'barang_id', type: 'integer', example: 1),
+                    new OA\Property(property: 'sku', type: 'string', example: 'BRG001'),
+                    new OA\Property(property: 'nama', type: 'string', example: 'Semen 50kg'),
+                    new OA\Property(property: 'kategori', type: 'string', nullable: true),
+                    new OA\Property(property: 'satuan', type: 'string', nullable: true),
+                    new OA\Property(property: 'stok_total', type: 'number', format: 'float', example: 120),
+                    new OA\Property(property: 'min_stok', type: 'number', format: 'float'),
+                    new OA\Property(property: 'max_stok', type: 'number', format: 'float'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['aktif', 'nonaktif']),
+                ])),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function stok(Request $request)
@@ -61,38 +84,54 @@ class LaporanController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('nama', 'like', "%{$s}%")
-                  ->orWhere('sku', 'like', "%{$s}%");
+                    ->orWhere('sku', 'like', "%{$s}%");
             });
         }
 
         $perPage = min(100, (int) $request->per_page ?: 50);
-        $barang = $query->paginate($perPage);
-        $barangIds = $barang->pluck('id')->toArray();
-        $saldoMap = $this->stokService->hitungSaldoStokBatch($barangIds);
+        $cacheKey = 'laporan_stok:' . md5(json_encode([
+            $request->filled('kategori_id') ? (int) $request->kategori_id : null,
+            $request->filled('status') ? $request->status : null,
+            $request->filled('search') ? $request->search : null,
+            (int) $request->get('page', 1),
+            $perPage,
+        ]));
 
-        $data = $barang->map(function ($b) use ($saldoMap) {
+        $result = Cache::remember($cacheKey, 60, function () use ($query, $perPage) {
+            $barang = $query->paginate($perPage);
+            $saldoMap = $this->stokService->hitungSaldoStokBatch($barang->pluck('id')->toArray());
+
+            $data = $barang->map(function ($b) use ($saldoMap) {
+                return [
+                    'barang_id' => $b->id,
+                    'sku' => $b->sku,
+                    'nama' => $b->nama,
+                    'kategori' => $b->kategori->nama ?? null,
+                    'satuan' => $b->satuan->singkatan ?? null,
+                    'stok_total' => $saldoMap[$b->id] ?? 0,
+                    'min_stok' => $b->min_stok,
+                    'max_stok' => $b->max_stok,
+                    'status' => $b->status,
+                ];
+            });
+
             return [
-                'barang_id' => $b->id,
-                'sku' => $b->sku,
-                'nama' => $b->nama,
-                'kategori' => $b->kategori->nama ?? null,
-                'satuan' => $b->satuan->singkatan ?? null,
-                'stok_total' => $saldoMap[$b->id] ?? 0,
-                'min_stok' => $b->min_stok,
-                'max_stok' => $b->max_stok,
-                'status' => $b->status,
+                'data' => $data,
+                'meta' => [
+                    'current_page' => $barang->currentPage(),
+                    'last_page' => $barang->lastPage(),
+                    'per_page' => $barang->perPage(),
+                    'total' => $barang->total(),
+                ],
             ];
         });
 
         return response()->json([
-            'data' => $data,
-            'meta' => [
-                'total' => $barang->total(),
-                'per_page' => $barang->perPage(),
-                'current_page' => $barang->currentPage(),
-                'last_page' => $barang->lastPage(),
-            ],
-        ]);
+            'success' => true,
+            'message' => 'Laporan stok berhasil dimuat',
+            'data' => $result['data'],
+            'meta' => $result['meta'],
+        ], 200);
     }
 
     #[OA\Get(
@@ -101,22 +140,30 @@ class LaporanController extends Controller
         tags: ['Laporan'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'start_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'end_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
             new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+            new OA\Parameter(name: 'supplier_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Barang masuk report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Barang masuk report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan barang masuk berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/BarangMasuk')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function barangMasuk(Request $request)
     {
         $query = BarangMasuk::with([
-            'gudang' => fn($q) => $q->withTrashed(),
-            'supplier' => fn($q) => $q->withTrashed(),
-            'createdBy' => fn($q) => $q->withTrashed(),
+            'gudang' => fn ($q) => $q->withTrashed(),
+            'supplier' => fn ($q) => $q->withTrashed(),
+            'createdBy' => fn ($q) => $q->withTrashed(),
             'details.barang',
             'details.lokasiRak',
         ]);
@@ -144,10 +191,9 @@ class LaporanController extends Controller
         $query->orderBy('tanggal', 'desc');
 
         $perPage = min(100, (int) $request->per_page ?: 50);
+        $paginated = $query->paginate($perPage);
 
-        return response()->json([
-            'data' => BarangMasukResource::collection($query->paginate($perPage)),
-        ]);
+        return $this->paginated($paginated, BarangMasukResource::collection($paginated->items()), 'Laporan barang masuk berhasil dimuat');
     }
 
     #[OA\Get(
@@ -156,22 +202,30 @@ class LaporanController extends Controller
         tags: ['Laporan'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'start_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'end_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
             new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+            new OA\Parameter(name: 'customer_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected', 'delivered', 'partial'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Barang keluar report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Barang keluar report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan barang keluar berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/BarangKeluar')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function barangKeluar(Request $request)
     {
         $query = BarangKeluar::with([
-            'gudang' => fn($q) => $q->withTrashed(),
-            'customer' => fn($q) => $q->withTrashed(),
-            'createdBy' => fn($q) => $q->withTrashed(),
+            'gudang' => fn ($q) => $q->withTrashed(),
+            'customer' => fn ($q) => $q->withTrashed(),
+            'createdBy' => fn ($q) => $q->withTrashed(),
             'details.barang',
             'details.lokasiRak',
         ]);
@@ -199,10 +253,9 @@ class LaporanController extends Controller
         $query->orderBy('tanggal', 'desc');
 
         $perPage = min(100, (int) $request->per_page ?: 50);
+        $paginated = $query->paginate($perPage);
 
-        return response()->json([
-            'data' => BarangKeluarResource::collection($query->paginate($perPage)),
-        ]);
+        return $this->paginated($paginated, BarangKeluarResource::collection($paginated->items()), 'Laporan barang keluar berhasil dimuat');
     }
 
     #[OA\Get(
@@ -211,22 +264,31 @@ class LaporanController extends Controller
         tags: ['Laporan'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'start_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'end_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
+            new OA\Parameter(name: 'barang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'gudang_asal_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+            new OA\Parameter(name: 'gudang_tujuan_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected', 'completed'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Mutasi stok report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Mutasi stok report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan mutasi stok berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/MutasiStok')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function mutasiStok(Request $request)
     {
         $query = MutasiStok::with([
             'barang',
-            'gudangAsal' => fn($q) => $q->withTrashed(),
-            'gudangTujuan' => fn($q) => $q->withTrashed(),
+            'gudangAsal' => fn ($q) => $q->withTrashed(),
+            'gudangTujuan' => fn ($q) => $q->withTrashed(),
             'lokasiRakAsal',
             'lokasiRakTujuan',
             'createdBy',
@@ -259,10 +321,9 @@ class LaporanController extends Controller
         $query->orderBy('tanggal', 'desc');
 
         $perPage = min(100, (int) $request->per_page ?: 50);
+        $paginated = $query->paginate($perPage);
 
-        return response()->json([
-            'data' => MutasiStokResource::collection($query->paginate($perPage)),
-        ]);
+        return $this->paginated($paginated, MutasiStokResource::collection($paginated->items()), 'Laporan mutasi stok berhasil dimuat');
     }
 
     #[OA\Get(
@@ -271,21 +332,28 @@ class LaporanController extends Controller
         tags: ['Laporan'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'start_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'end_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
             new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['draft', 'in_progress', 'completed', 'cancelled'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Stok opname report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Stok opname report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan stok opname berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/StokOpname')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function stokOpname(Request $request)
     {
         $query = StokOpname::with([
-            'gudang' => fn($q) => $q->withTrashed(),
-            'createdBy' => fn($q) => $q->withTrashed(),
+            'gudang' => fn ($q) => $q->withTrashed(),
+            'createdBy' => fn ($q) => $q->withTrashed(),
             'details.barang',
             'details.lokasiRak',
         ]);
@@ -309,10 +377,9 @@ class LaporanController extends Controller
         $query->orderBy('tanggal', 'desc');
 
         $perPage = min(100, (int) $request->per_page ?: 50);
+        $paginated = $query->paginate($perPage);
 
-        return response()->json([
-            'data' => StokOpnameResource::collection($query->paginate($perPage)),
-        ]);
+        return $this->paginated($paginated, StokOpnameResource::collection($paginated->items()), 'Laporan stok opname berhasil dimuat');
     }
 
     #[OA\Get(
@@ -321,21 +388,30 @@ class LaporanController extends Controller
         tags: ['Laporan'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'start_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'end_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
             new OA\Parameter(name: 'user_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+            new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'shift_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['hadir', 'izin', 'sakit', 'alpha', 'cuti', 'terlambat'])),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 50, maximum: 100)),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Absensi report data'),
-            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 200, description: 'Absensi report data', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Laporan absensi berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Absensi')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function absensi(Request $request)
     {
         $query = Absensi::with([
-            'user' => fn($q) => $q->withTrashed(),
-            'gudang' => fn($q) => $q->withTrashed(),
+            'user' => fn ($q) => $q->withTrashed(),
+            'gudang' => fn ($q) => $q->withTrashed(),
             'shift',
         ]);
 
@@ -366,9 +442,8 @@ class LaporanController extends Controller
         $query->orderBy('tanggal', 'desc');
 
         $perPage = min(100, (int) $request->per_page ?: 50);
+        $paginated = $query->paginate($perPage);
 
-        return response()->json([
-            'data' => AbsensiResource::collection($query->paginate($perPage)),
-        ]);
+        return $this->paginated($paginated, AbsensiResource::collection($paginated->items()), 'Laporan absensi berhasil dimuat');
     }
 }

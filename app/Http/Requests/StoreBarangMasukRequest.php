@@ -20,8 +20,15 @@ class StoreBarangMasukRequest extends FormRequest
             'supplier_id' => 'required|exists:supplier,id',
             'tanggal' => 'required|date',
             'keterangan' => 'nullable|string',
-            'status' => 'in:pending,approved,rejected,partial',
+            'status' => 'in:pending,approved,rejected',
             'dokumen' => 'nullable|string',
+            'details' => 'nullable|array|min:1',
+            'details.*.barang_id' => 'required|exists:barang,id',
+            'details.*.lokasi_rak_id' => 'nullable|exists:lokasi_rak,id',
+            'details.*.qty' => 'required|numeric|min:0.01',
+            'details.*.harga_satuan' => 'nullable|numeric|min:0',
+            'details.*.diskon' => 'nullable|numeric|min:0',
+            'details.*.pajak' => 'nullable|numeric|min:0',
         ];
     }
 }

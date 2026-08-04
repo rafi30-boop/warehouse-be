@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers\Api;
 
-use OpenApi\Attributes as OA;
+use App\Exports\BarangExport;
 use App\Http\Controllers\Controller;
-use App\Models\Barang;
 use App\Http\Requests\StoreBarangRequest;
 use App\Http\Requests\UpdateBarangRequest;
+use App\Models\Barang;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Barang')]
 class BarangController extends Controller
 {
+    use ApiResponse;
+
     public function __construct()
     {
-        $this->middleware('permission:barang-list|barang-create|barang-edit|barang-delete', ['only' => ['index','show']]);
+        $this->middleware('permission:barang-list|barang-create|barang-edit|barang-delete', ['only' => ['index', 'show']]);
         $this->middleware('permission:barang-create', ['only' => ['store']]);
         $this->middleware('permission:barang-edit', ['only' => ['update']]);
         $this->middleware('permission:barang-delete', ['only' => ['destroy']]);
@@ -27,14 +32,15 @@ class BarangController extends Controller
         tags: ['Barang'],
         security: [['bearerAuth' => []]],
         responses: [
-            new OA\Response(response: 200, description: 'Excel file download'),
+            new OA\Response(response: 200, description: 'Excel file download (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)'),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function exportExcel()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\BarangExport,
+        return Excel::download(
+            new BarangExport,
             'barang.xlsx'
         );
     }
@@ -45,19 +51,41 @@ class BarangController extends Controller
         tags: ['Barang'],
         security: [['bearerAuth' => []]],
         parameters: [
-            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
-            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15, maximum: 100)),
+            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string', description: 'Search by nama or sku')),
             new OA\Parameter(name: 'kategori_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Paginated list of barang'),
+            new OA\Response(response: 200, description: 'Paginated list of barang', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Daftar barang berhasil dimuat'),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Barang')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
             new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function index(Request $request)
     {
         $perPage = min(100, (int) $request->per_page ?: 15);
-        return response()->json(Barang::with(['kategori', 'satuan'])->paginate($perPage));
+
+        $query = Barang::with(['kategori', 'satuan']);
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('nama', 'like', "%{$s}%")
+                    ->orWhere('sku', 'like', "%{$s}%")
+                    ->orWhere('barcode', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('kategori_id')) {
+            $query->where('kategori_id', $request->kategori_id);
+        }
+
+        return $this->paginated($query->paginate($perPage), message: 'Daftar barang berhasil dimuat');
     }
 
     #[OA\Post(
@@ -70,13 +98,19 @@ class BarangController extends Controller
             content: new OA\JsonContent(ref: '#/components/schemas/StoreBarangRequest')
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Barang created'),
+            new OA\Response(response: 201, description: 'Barang created', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Barang berhasil dibuat'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/Barang'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function store(StoreBarangRequest $request)
     {
-        return response()->json(Barang::create($request->validated()), 201);
+        return $this->success(Barang::create($request->validated()), 'Barang berhasil dibuat', 201);
     }
 
     #[OA\Get(
@@ -88,13 +122,19 @@ class BarangController extends Controller
             new OA\Parameter(name: 'barang', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Barang detail'),
+            new OA\Response(response: 200, description: 'Barang detail', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Detail barang berhasil dimuat'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/Barang'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function show(Barang $barang)
     {
-        return response()->json($barang->load(['kategori', 'satuan']));
+        return $this->success($barang->load(['kategori', 'satuan']), 'Detail barang berhasil dimuat');
     }
 
     #[OA\Put(
@@ -110,14 +150,21 @@ class BarangController extends Controller
             content: new OA\JsonContent(ref: '#/components/schemas/StoreBarangRequest')
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Barang updated'),
+            new OA\Response(response: 200, description: 'Barang updated', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Barang berhasil diperbarui'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/Barang'),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function update(UpdateBarangRequest $request, Barang $barang)
     {
         $barang->update($request->validated());
-        return response()->json($barang->load(['kategori', 'satuan']));
+
+        return $this->success($barang->load(['kategori', 'satuan']), 'Barang berhasil diperbarui');
     }
 
     #[OA\Delete(
@@ -129,13 +176,20 @@ class BarangController extends Controller
             new OA\Parameter(name: 'barang', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: 204, description: 'Barang deleted'),
+            new OA\Response(response: 200, description: 'Barang deleted', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Barang berhasil dihapus'),
+                new OA\Property(property: 'data', type: 'null', example: null),
+            ])),
+            new OA\Response(response: 401, description: 'Unauthenticated', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
             new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
     public function destroy(Barang $barang)
     {
         $barang->delete();
-        return response()->json(null, 204);
+
+        return $this->success(null, 'Barang berhasil dihapus');
     }
 }
