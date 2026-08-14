@@ -176,7 +176,7 @@ Body sama pola dengan barang masuk, bedanya `customer_id` menggantikan `supplier
   "details": [ { "barang_id": 1, "qty": 5 } ]
 }
 ```
-
+   
 **Alur status:** `pending` → `approved` → `completed` | `rejected`
 
 ### 4.5 Stok Opname (`/api/stok-opname`)
