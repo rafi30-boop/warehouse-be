@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn () => response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated',
+        ], 401));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->shouldRenderJsonWhen(function ($request) {
