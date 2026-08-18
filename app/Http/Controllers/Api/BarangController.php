@@ -188,7 +188,11 @@ class BarangController extends Controller
     )]
     public function destroy(Barang $barang)
     {
-        $barang->delete();
+        try {
+            $barang->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Barang tidak dapat dihapus karena masih digunakan pada data transaksi', 409);
+        }
 
         return $this->success(null, 'Barang berhasil dihapus');
     }

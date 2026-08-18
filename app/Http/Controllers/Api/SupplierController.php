@@ -154,7 +154,11 @@ class SupplierController extends Controller
     )]
     public function destroy(Supplier $supplier)
     {
-        $supplier->delete();
+        try {
+            $supplier->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Supplier tidak dapat dihapus karena masih digunakan pada transaksi', 409);
+        }
 
         return $this->success(null, 'Supplier berhasil dihapus');
     }

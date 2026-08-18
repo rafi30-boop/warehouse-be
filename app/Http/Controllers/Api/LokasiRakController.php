@@ -165,7 +165,11 @@ class LokasiRakController extends Controller
     )]
     public function destroy(LokasiRak $lokasiRak)
     {
-        $lokasiRak->delete();
+        try {
+            $lokasiRak->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Lokasi rak tidak dapat dihapus karena masih digunakan pada data lain', 409);
+        }
 
         return $this->success(null, 'Lokasi rak berhasil dihapus');
     }

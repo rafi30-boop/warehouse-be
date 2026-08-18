@@ -155,7 +155,11 @@ class SatuanController extends Controller
     )]
     public function destroy(Satuan $satuan)
     {
-        $satuan->delete();
+        try {
+            $satuan->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Satuan tidak dapat dihapus karena masih digunakan pada data barang', 409);
+        }
 
         return $this->success(null, 'Satuan berhasil dihapus');
     }

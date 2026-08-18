@@ -151,7 +151,11 @@ class KategoriController extends Controller
     )]
     public function destroy(Kategori $kategori)
     {
-        $kategori->delete();
+        try {
+            $kategori->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Kategori tidak dapat dihapus karena masih digunakan pada data lain', 409);
+        }
 
         return $this->success(null, 'Kategori berhasil dihapus');
     }

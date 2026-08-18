@@ -184,7 +184,11 @@ class UserController extends Controller
     )]
     public function destroy(User $user)
     {
-        $user->delete();
+        try {
+            $user->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('User tidak dapat dihapus karena masih digunakan pada data lain', 409);
+        }
 
         return $this->success(null, 'User berhasil dihapus');
     }

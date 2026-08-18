@@ -154,7 +154,11 @@ class CustomerController extends Controller
     )]
     public function destroy(Customer $customer)
     {
-        $customer->delete();
+        try {
+            $customer->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Customer tidak dapat dihapus karena masih digunakan pada transaksi', 409);
+        }
 
         return $this->success(null, 'Customer berhasil dihapus');
     }

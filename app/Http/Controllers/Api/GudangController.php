@@ -160,7 +160,11 @@ class GudangController extends Controller
     )]
     public function destroy(Gudang $gudang)
     {
-        $gudang->delete();
+        try {
+            $gudang->forceDelete();
+        } catch (\Illuminate\Database\QueryException) {
+            return $this->error('Gudang tidak dapat dihapus karena masih digunakan pada data lain', 409);
+        }
 
         return $this->success(null, 'Gudang berhasil dihapus');
     }

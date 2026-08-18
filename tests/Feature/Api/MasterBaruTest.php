@@ -29,7 +29,7 @@ class MasterBaruTest extends ApiTestCase
             ->assertJsonPath('data.nama', 'Kilogram Baru');
 
         $this->deleteJson("/api/satuan/{$id}")->assertOk();
-        $this->assertSoftDeleted('satuan', ['id' => $id]);
+        $this->assertDatabaseMissing('satuan', ['id' => $id]);
     }
 
     public function test_satuan_validation_error()
