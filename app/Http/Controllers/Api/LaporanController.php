@@ -89,7 +89,7 @@ class LaporanController extends Controller
         }
 
         $perPage = min(100, (int) $request->per_page ?: 50);
-        $cacheKey = 'laporan_stok:' . md5(json_encode([
+        $cacheKey = 'laporan_stok:'.md5(json_encode([
             $request->filled('kategori_id') ? (int) $request->kategori_id : null,
             $request->filled('status') ? $request->status : null,
             $request->filled('search') ? $request->search : null,
@@ -411,12 +411,17 @@ class LaporanController extends Controller
     {
         $query = Absensi::with([
             'user' => fn ($q) => $q->withTrashed(),
+            'petugas',
             'gudang' => fn ($q) => $q->withTrashed(),
             'shift',
         ]);
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('petugas_id')) {
+            $query->where('petugas_id', $request->petugas_id);
         }
 
         if ($request->filled('gudang_id')) {

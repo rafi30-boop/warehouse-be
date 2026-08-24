@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name', 'email', 'password', 'gudang_id', 'no_pegawai',
@@ -29,6 +29,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
+            'qr_revoked_at' => 'datetime',
         ];
     }
 
@@ -45,5 +46,10 @@ class User extends Authenticatable
     public function absensi()
     {
         return $this->hasMany(Absensi::class);
+    }
+
+    public function petugas()
+    {
+        return $this->hasOne(Petugas::class);
     }
 }

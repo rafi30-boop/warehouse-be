@@ -26,7 +26,9 @@ class UpdateAbsensiRequest extends FormRequest
             'radius_validasi' => 'nullable|integer',
             'foto_masuk' => 'nullable|string',
             'foto_pulang' => 'nullable|string',
-            'keterangan' => 'nullable|string',
+            'keterangan' => 'required|string|min:5',
+            'sumber' => 'nullable|in:qr,manual',
+            'di_luar_jadwal' => 'nullable|boolean',
         ];
     }
 }
