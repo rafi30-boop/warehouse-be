@@ -79,7 +79,8 @@ class AbsensiController extends Controller
         $paginated = $query->paginate($perPage);
 
         return $this->paginated(
-            \App\Http\Resources\AbsensiResource::collection($paginated),
+            $paginated,
+            items: \App\Http\Resources\AbsensiResource::collection($paginated->items()),
             message: 'Daftar absensi berhasil dimuat'
         );
     }
