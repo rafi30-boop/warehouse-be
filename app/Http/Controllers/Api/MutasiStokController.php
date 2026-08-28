@@ -184,8 +184,10 @@ class MutasiStokController extends Controller
         parameters: [
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15, maximum: 100)),
             new OA\Parameter(name: 'barang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', description: 'Filter where gudang is either asal OR tujuan (used by FE dropdown)')),
             new OA\Parameter(name: 'gudang_asal_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'gudang_tujuan_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string', description: 'Search no_referensi, barang nama/sku, rute')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected', 'completed'])),
         ],
         responses: [
@@ -209,12 +211,36 @@ class MutasiStokController extends Controller
             $query->where('barang_id', $request->barang_id);
         }
 
+        if ($request->filled('gudang_id')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('gudang_asal_id', $request->gudang_id)
+                  ->orWhere('gudang_tujuan_id', $request->gudang_id);
+            });
+        }
+
         if ($request->filled('gudang_asal_id')) {
             $query->where('gudang_asal_id', $request->gudang_asal_id);
         }
 
         if ($request->filled('gudang_tujuan_id')) {
             $query->where('gudang_tujuan_id', $request->gudang_tujuan_id);
+        }
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('no_referensi', 'like', "%{$s}%")
+                  ->orWhereHas('barang', function ($qb) use ($s) {
+                      $qb->where('nama', 'like', "%{$s}%")
+                         ->orWhere('sku', 'like', "%{$s}%");
+                  })
+                  ->orWhereHas('gudangAsal', function ($qb) use ($s) {
+                      $qb->where('nama', 'like', "%{$s}%");
+                  })
+                  ->orWhereHas('gudangTujuan', function ($qb) use ($s) {
+                      $qb->where('nama', 'like', "%{$s}%");
+                  });
+            });
         }
 
         if ($request->filled('status')) {
