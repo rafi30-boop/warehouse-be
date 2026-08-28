@@ -354,7 +354,8 @@ class LaporanController extends Controller
         $query = StokOpname::with([
             'gudang' => fn ($q) => $q->withTrashed(),
             'createdBy' => fn ($q) => $q->withTrashed(),
-            'details.barang',
+            'details.barang.kategori',
+            'details.barang.satuan',
             'details.lokasiRak',
         ]);
 
