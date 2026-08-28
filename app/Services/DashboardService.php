@@ -39,18 +39,21 @@ class DashboardService extends BaseService
 
     private function getMetrics(?int $gudangId): array
     {
-        $totalBarang = Barang::where('status', 'aktif')->count();
-        $totalGudang = Gudang::count();
+        $totalGudang = $gudangId ? 1 : Gudang::count();
 
         $allBarangIds = Barang::where('status', 'aktif')->pluck('id')->toArray();
         $saldoMap = $this->stokService->hitungSaldoStokBatch($allBarangIds, $gudangId);
 
+        $totalBarang = 0;
         $totalNilaiStok = 0;
         $barangMap = Barang::whereIn('id', $allBarangIds)->get()->keyBy('id');
         foreach ($saldoMap as $barangId => $stok) {
-            $barang = $barangMap[$barangId] ?? null;
-            if ($barang && $stok > 0) {
-                $totalNilaiStok += $stok * ($barang->harga_beli ?? 0);
+            if ($stok > 0) {
+                $totalBarang++;
+                $barang = $barangMap[$barangId] ?? null;
+                if ($barang) {
+                    $totalNilaiStok += $stok * ($barang->harga_beli ?? 0);
+                }
             }
         }
 
@@ -216,9 +219,28 @@ class DashboardService extends BaseService
 
     private function getRecentActivity(?int $gudangId): array
     {
-        $logs = AktivitasLog::with(['user.roles'])
-            ->whereIn('action', ['store', 'approve', 'reject', 'deliver', 'complete', 'scan', 'login', 'start', 'cancel'])
-            ->orderBy('created_at', 'desc')
+        $query = AktivitasLog::with(['user.roles'])
+            ->whereIn('action', ['store', 'approve', 'reject', 'deliver', 'complete', 'scan', 'login', 'start', 'cancel']);
+
+        if ($gudangId) {
+            $query->where(function ($q) use ($gudangId) {
+                $q->where(function ($q2) use ($gudangId) {
+                    $q2->where('model', 'BarangMasuk')
+                        ->whereIn('model_id', BarangMasuk::where('gudang_id', $gudangId)->pluck('id'));
+                })->orWhere(function ($q2) use ($gudangId) {
+                    $q2->where('model', 'BarangKeluar')
+                        ->whereIn('model_id', BarangKeluar::where('gudang_id', $gudangId)->pluck('id'));
+                })->orWhere(function ($q2) use ($gudangId) {
+                    $q2->where('model', 'MutasiStok')
+                        ->whereIn('model_id', MutasiStok::where('gudang_asal_id', $gudangId)->orWhere('gudang_tujuan_id', $gudangId)->pluck('id'));
+                })->orWhere(function ($q2) use ($gudangId) {
+                    $q2->where('model', 'StokOpname')
+                        ->whereIn('model_id', StokOpname::where('gudang_id', $gudangId)->pluck('id'));
+                })->orWhereIn('model', ['Auth', 'Absensi']);
+            });
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($log) {
