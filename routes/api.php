@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AbsensiController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AktivitasLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangController;
@@ -43,6 +44,8 @@ Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
+
+    Route::get('dashboard', [DashboardController::class, 'index']);
 
     Route::post('upload', [FileController::class, 'store']);
 

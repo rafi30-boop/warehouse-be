@@ -137,6 +137,10 @@ class GudangParfumSeeder extends Seeder
             'jam_masuk' => '15:00', 'jam_pulang' => '23:00',
             'toleransi_masuk' => 15, 'toleransi_pulang' => 10, 'status' => 'aktif',
         ]);
+        $shiftMalam = Shift::firstOrCreate(['nama' => 'Malam'], [
+            'jam_masuk' => '23:00', 'jam_pulang' => '07:00',
+            'toleransi_masuk' => 15, 'toleransi_pulang' => 10, 'status' => 'aktif',
+        ]);
 
         // ==========================================================
         // 5. SUPPLIER
@@ -379,6 +383,11 @@ class GudangParfumSeeder extends Seeder
                 'delivered_by' => $deliveredStatus === 'delivered' ? $creator->id : null,
                 'delivered_at' => $deliveredStatus === 'delivered' ? Carbon::now()->addDays($dayOffset + 1)->setTime(10, 0) : null,
             ]);
+
+            // Update status to 'approved' if delivered status is null but approval exists
+            if ($deliveredStatus === null && $status !== 'pending') {
+                $keluar->update(['status' => 'approved']);
+            }
 
             foreach ($items as [$sku, $qty, $rakKode]) {
                 $barang = $barangs[$sku];
@@ -640,19 +649,29 @@ class GudangParfumSeeder extends Seeder
         // 20. AKTIVITAS LOG
         // ==========================================================
         $logs = [
-            [$budi->id, -2, '/api/barang-masuk/BM-2026-0007', 'POST', 'store', 'BarangMasuk', 'Membuat penerimaan BM-2026-0007'],
-            [$admin->id, -2, '/api/barang-masuk/BM-2026-0006/approve', 'POST', 'approve', 'BarangMasuk', 'Approve BM-2026-0006'],
-            [$siti->id, -1, '/api/login', 'POST', 'login', 'Auth', 'Login berhasil dari jaringan kantor Jakarta'],
-            [$rudi->id, -3, '/api/barang-keluar/BK-2026-0006', 'POST', 'store', 'BarangKeluar', 'Membuat pesanan BK-2026-0006 reseller Sidoarjo'],
-            [$admin->id, -46, '/api/izin/3/reject', 'POST', 'reject', 'IzinRequest', 'Menolak cuti Agus (audit gudang)'],
+            [$budi->id, 0, '/api/barang-masuk', 'POST', 'store', 'BarangMasuk', 'Membuat penerimaan BM-2026-0007', ['no_referensi' => 'BM-2026-0007', 'status' => 'pending']],
+            [$admin->id, -1, '/api/barang-masuk/BM-2026-0006/approve', 'POST', 'approve', 'BarangMasuk', 'Approve BM-2026-0006', ['no_referensi' => 'BM-2026-0006', 'status' => 'approved', 'total_nilai' => 28700000]],
+            [$siti->id, -1, '/api/login', 'POST', 'login', 'Auth', 'Login berhasil dari jaringan kantor Jakarta', []],
+            [$rudi->id, -2, '/api/barang-keluar', 'POST', 'store', 'BarangKeluar', 'Membuat pesanan BK-2026-0006 reseller Sidoarjo', ['no_referensi' => 'BK-2026-0006', 'status' => 'pending', 'total_nilai' => 5400000]],
+            [$admin->id, -2, '/api/izin/3/reject', 'POST', 'reject', 'IzinRequest', 'Menolak cuti Agus (audit gudang)', ['status' => 'ditolak']],
+            [$budi->id, 0, '/api/barang-masuk/BM-2026-0006/approve', 'POST', 'approve', 'BarangMasuk', 'Approve penerimaan container kedua', ['no_referensi' => 'BM-2026-0006', 'status' => 'approved', 'total_nilai' => 42500000]],
+            [$agus->id, 0, '/api/barang-keluar/BK-2026-0003/approve', 'POST', 'approve', 'BarangKeluar', 'Approve pengiriman ke CV Sinar Parfum', ['no_referensi' => 'BK-2026-0003', 'status' => 'approved', 'total_nilai' => 18200000]],
+            [$rudi->id, 0, '/api/absensi', 'POST', 'scan', 'Absensi', 'Check-in shift pagi Gudang Surabaya', ['status' => 'hadir']],
+            [$siti->id, 0, '/api/stok-opname', 'POST', 'store', 'StokOpname', 'Mulai opname siklus Agustus zona A', ['no_referensi' => 'SO-2026-0802', 'status' => 'in_progress']],
+            [$budi->id, -1, '/api/mutasi-stok/MS-2026-0001/complete', 'POST', 'complete', 'MutasiStok', 'Selesaikan transfer Citrus Breeze ke Bandung', ['no_referensi' => 'MS-2026-0001', 'status' => 'completed']],
+            [$intan->id, 0, '/api/barang-keluar', 'POST', 'store', 'BarangKeluar', 'Buat pesanan Vanilla Sky untuk reseller', ['no_referensi' => 'BK-2026-0006', 'status' => 'pending', 'total_nilai' => 3600000]],
+            [$admin->id, -1, '/api/barang-masuk/BM-2026-0007/approve', 'POST', 'approve', 'BarangMasuk', 'Approve penerimaan attar Ramadan', ['no_referensi' => 'BM-2026-0007', 'status' => 'approved', 'total_nilai' => 14700000]],
+            [$agus->id, -1, '/api/barang-keluar/BK-2026-0003/deliver', 'POST', 'deliver', 'BarangKeluar', 'Serahkan ke kurir kargo Bandung', ['no_referensi' => 'BK-2026-0003', 'status' => 'delivered']],
+            [$dewi->id, -3, '/api/izin', 'POST', 'store', 'IzinRequest', 'Pengajuan izin sakit 2 hari', ['status' => 'menunggu']],
+            [$admin->id, -3, '/api/izin/2/approve', 'POST', 'approve', 'IzinRequest', 'Setujui izin sakit Dewi', ['status' => 'disetujui']],
         ];
-        foreach ($logs as [$uid, $offset, $url, $method, $action, $model, $ket]) {
+        foreach ($logs as [$uid, $offset, $url, $method, $action, $model, $ket, $extra]) {
             AktivitasLog::create([
                 'user_id' => $uid, 'ip_address' => '127.0.0.1',
                 'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) warehouse-app/1.0',
                 'url' => $url, 'method' => $method, 'action' => $action,
-                'model' => $model, 'data_new' => json_encode(['catatan' => $ket]),
-                'created_at' => Carbon::now()->addDays($offset)->setTime(rand(8, 16), rand(0, 59)),
+                'model' => $model, 'data_new' => array_merge(['catatan' => $ket], $extra),
+                'created_at' => Carbon::now()->addDays($offset)->setTime(rand(7, 17), rand(0, 59)),
             ]);
         }
 
