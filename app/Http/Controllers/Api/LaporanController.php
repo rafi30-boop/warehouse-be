@@ -267,6 +267,7 @@ class LaporanController extends Controller
             new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'Start date (Y-m-d)')),
             new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date', description: 'End date (Y-m-d)')),
             new OA\Parameter(name: 'barang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'gudang_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', description: 'Filter where gudang is either asal OR tujuan')),
             new OA\Parameter(name: 'gudang_asal_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'gudang_tujuan_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'approved', 'rejected', 'completed'])),
@@ -296,6 +297,13 @@ class LaporanController extends Controller
 
         if ($request->filled('barang_id')) {
             $query->where('barang_id', $request->barang_id);
+        }
+
+        if ($request->filled('gudang_id')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('gudang_asal_id', $request->gudang_id)
+                  ->orWhere('gudang_tujuan_id', $request->gudang_id);
+            });
         }
 
         if ($request->filled('gudang_asal_id')) {
