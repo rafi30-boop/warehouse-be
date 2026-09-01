@@ -86,5 +86,85 @@ class RolePermissionSeeder extends Seeder
             'jadwal-petugas-list',
             'upload',
         ]);
+
+        // Admin Gudang - Manage specific warehouse operations
+        $adminGudang = Role::firstOrCreate(['name' => 'admin-gudang']);
+        $adminGudang->syncPermissions([
+            'gudang-list',
+            'barang-list', 'barang-create', 'barang-edit', 'barang-delete',
+            'kategori-list',
+            'supplier-list', 'supplier-create', 'supplier-edit',
+            'customer-list', 'customer-create', 'customer-edit',
+            'barang-masuk-list', 'barang-masuk-create', 'barang-masuk-edit',
+            'barang-masuk-approve',
+            'barang-keluar-list', 'barang-keluar-create', 'barang-keluar-edit',
+            'barang-keluar-approve', 'barang-keluar-deliver',
+            'mutasi-stok-list', 'mutasi-stok-create', 'mutasi-stok-approve',
+            'stok-opname-list', 'stok-opname-create', 'stok-opname-start',
+            'stok-opname-complete',
+            'absensi-list', 'absensi-create', 'absensi-edit',
+            'absensi-scan',
+            'laporan-stok', 'laporan-barang-masuk', 'laporan-barang-keluar',
+            'laporan-mutasi-stok', 'laporan-stok-opname',
+            'kartu-stok-list',
+            'upload',
+        ]);
+
+        // Kepala Gudang - Higher level approval and reporting
+        $kepalaGudang = Role::firstOrCreate(['name' => 'kepala-gudang']);
+        $kepalaGudang->syncPermissions([
+            'gudang-list',
+            'barang-list', 'barang-create', 'barang-edit', 'barang-export',
+            'kategori-list',
+            'supplier-list', 'supplier-create', 'supplier-edit',
+            'customer-list', 'customer-create', 'customer-edit',
+            'barang-masuk-list', 'barang-masuk-create', 'barang-masuk-edit',
+            'barang-masuk-approve', 'barang-masuk-export', 'barang-masuk-print',
+            'barang-keluar-list', 'barang-keluar-create', 'barang-keluar-edit',
+            'barang-keluar-approve', 'barang-keluar-deliver',
+            'barang-keluar-export', 'barang-keluar-print',
+            'mutasi-stok-list', 'mutasi-stok-create', 'mutasi-stok-approve',
+            'stok-opname-list', 'stok-opname-create', 'stok-opname-start',
+            'stok-opname-complete', 'stok-opname-cancel',
+            'absensi-list', 'absensi-edit', 'laporan-absensi',
+            'laporan-stok', 'laporan-barang-masuk', 'laporan-barang-keluar',
+            'laporan-mutasi-stok', 'laporan-stok-opname', 'laporan-absensi',
+            'kartu-stok-list',
+            'petugas-list',
+            'upload',
+            'notifikasi-list',
+        ]);
+
+        // Petugas Gudang - Basic operational permissions
+        $petugasGudang = Role::firstOrCreate(['name' => 'petugas-gudang']);
+        $petugasGudang->syncPermissions([
+            'barang-list',
+            'barang-masuk-list', 'barang-masuk-create',
+            'barang-keluar-list', 'barang-keluar-create', 'barang-keluar-deliver',
+            'mutasi-stok-list', 'mutasi-stok-create',
+            'stok-opname-list', 'stok-opname-create', 'stok-opname-start',
+            'absensi-list', 'absensi-create', 'absensi-scan',
+            'kartu-stok-list',
+            'jadwal-petugas-list',
+            'upload',
+        ]);
+
+        // Checker - Verify transactions and stock
+        $checker = Role::firstOrCreate(['name' => 'checker']);
+        $checker->syncPermissions([
+            'barang-list',
+            'stok-opname-list', 'stok-opname-start', 'stok-opname-complete',
+            'kartu-stok-list',
+            'laporan-stok',
+            'aktivitas-log-list',
+        ]);
+
+        // Kurir/Driver - Delivery management only
+        $kurirDriver = Role::firstOrCreate(['name' => 'kurir-driver']);
+        $kurirDriver->syncPermissions([
+            'barang-keluar-list',
+            'barang-keluar-deliver',
+            
+        ]);
     }
 }
