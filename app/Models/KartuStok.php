@@ -16,6 +16,33 @@ class KartuStok extends Model
         'referensi_type', 'referensi_id', 'keterangan', 'created_by',
     ];
 
+    protected $appends = ['referensi_no'];
+
+    public function getReferensiNoAttribute(): ?string
+    {
+        if (!$this->referensi_type || !$this->referensi_id) {
+            return null;
+        }
+        try {
+            $type = $this->referensi_type;
+            // Normalisasikan jika hanya short name tanpa namespace
+            if (!str_contains($type, '\\')) {
+                $type = "App\\Models\\{$type}";
+            }
+            if (!class_exists($type)) {
+                return null;
+            }
+            $model = $type::find($this->referensi_id);
+            if (!$model) {
+                return null;
+            }
+            // Semua dokumen sumber punya no_referensi
+            return $model->no_referensi ?? "#{$this->referensi_id}";
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     public function barang()
     {
         return $this->belongsTo(Barang::class);
