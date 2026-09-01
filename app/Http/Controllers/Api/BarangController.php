@@ -66,27 +66,37 @@ class BarangController extends Controller
             new OA\Response(response: 403, description: 'Forbidden', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function index(Request $request)
-    {
-        $perPage = min(100, (int) $request->per_page ?: 15);
-
-        $query = Barang::with(['kategori', 'satuan']);
-
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('nama', 'like', "%{$s}%")
-                    ->orWhere('sku', 'like', "%{$s}%")
-                    ->orWhere('barcode', 'like', "%{$s}%");
-            });
-        }
-
-        if ($request->filled('kategori_id')) {
-            $query->where('kategori_id', $request->kategori_id);
-        }
-
-        return $this->paginated($query->paginate($perPage), message: 'Daftar barang berhasil dimuat');
-    }
+      public function index(Request $request)
+      {
+          $perPage = min(100, (int) $request->per_page ?: 15);
+  
+          $query = Barang::with(['kategori', 'satuan']);
+  
+          // Low stock filter
+          if ($request->filled('filter_low_stock')) {
+              // Filter items with min_stok > 0 (without checking current stock level)
+              // This shows items that have minimum stock defined
+              $query->whereNotNull('min_stok')
+                    ->where('min_stok', '>', 0);
+              
+              return $this->collection($query->get(), message: 'Daftar barang dengan minimum stok');
+          }
+  
+          if ($request->filled('search')) {
+              $s = $request->search;
+              $query->where(function ($q) use ($s) {
+                  $q->where('nama', 'like', "%{$s}%")
+                      ->orWhere('sku', 'like', "%{$s}%")
+                      ->orWhere('barcode', 'like', "%{$s}%");
+              });
+          }
+  
+          if ($request->filled('kategori_id')) {
+              $query->where('kategori_id', $request->kategori_id);
+          }
+  
+          return $this->paginated($query->paginate($perPage), message: 'Daftar barang berhasil dimuat');
+      }
 
     #[OA\Post(
         path: '/api/barang',
