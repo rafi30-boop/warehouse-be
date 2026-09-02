@@ -278,20 +278,28 @@ class IzinRequestController extends Controller
             return $this->error('Hanya pengajuan berstatus menunggu yang dapat disetujui.', 422);
         }
 
-        // Dual-subject: resolve petugas or user
+        // Dual-subject: resolve petugas or user — petugas tidak punya gudang_id sendiri, gudang diambil dari akun user terhubung
+        $izinRequest->loadMissing(['petugas.user', 'user']);
         $pegawai = $izinRequest->petugas;
         $user = $izinRequest->user;
-        
-        if ($pegawai && !$pegawai->gudang_id) {
-            return $this->error("Petugas {$pegawai->nama} belum memiliki gudang. Atur gudang terlebih dahulu.", 422);
+
+        // Gudang petugas via relasi user (area_kerja hanya string, bukan FK)
+        $pegawaiGudangId = $pegawai?->user?->gudang_id ?? $pegawai?->getAttribute('gudang_id');
+        $userGudangId = $user?->gudang_id;
+        $subjectName = $pegawai?->nama ?? $user?->name ?? 'Petugas';
+
+        if ($pegawai && !$pegawaiGudangId) {
+            return $this->error("Petugas {$pegawai->nama} belum memiliki gudang. Atur gudang pada akun user terhubung (Pengaturan → Users → Edit) terlebih dahulu.", 422);
         }
-        
-        if ($user && !$user->gudang_id) {
+
+        if (!$pegawai && $user && !$userGudangId) {
             return $this->error("Pegawai {$user->name} belum memiliki gudang. Atur gudang terlebih dahulu.", 422);
         }
-        
-        $gudangId = $pegawai?->gudang_id ?? $user?->gudang_id;
-        $subjectName = $pegawai?->nama ?? $user?->name;
+
+        $gudangId = $pegawaiGudangId ?? $userGudangId;
+        if (!$gudangId) {
+            return $this->error("Gagal menentukan gudang untuk {$subjectName}. Pastikan akun terkait sudah terhubung ke gudang.", 422);
+        }
 
         $created = DB::transaction(function () use ($request, $izinRequest, $pegawai, $user, $gudangId) {
             $izinRequest->update([
