@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMutasiStokRequest;
 use App\Http\Requests\UpdateMutasiStokRequest;
 use App\Models\MutasiStok;
+use App\Policies\BasePolicy;
 use App\Services\NotifikasiService;
 use App\Services\StokService;
 use App\Traits\ApiResponse;
@@ -52,6 +53,8 @@ class MutasiStokController extends Controller
         if ($mutasiStok->status !== 'pending') {
             return $this->error('Hanya dokumen berstatus pending yang dapat disetujui', 422);
         }
+
+        BasePolicy::denyIfSelfApprove(request()->user(), $mutasiStok);
 
         $mutasiStok->update([
             'status' => 'approved',
@@ -145,6 +148,8 @@ class MutasiStokController extends Controller
             return $this->error('Hanya dokumen berstatus approved yang dapat diselesaikan', 422);
         }
 
+        BasePolicy::denyIfSelfApprove(request()->user(), $mutasiStok);
+
         $stokService = app(StokService::class);
         $errors = $stokService->validasiStokDetail([
             ['barang_id' => $mutasiStok->barang_id, 'qty' => $mutasiStok->qty],
@@ -211,10 +216,19 @@ class MutasiStokController extends Controller
             $query->where('barang_id', $request->barang_id);
         }
 
-        if ($request->filled('gudang_id')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('gudang_asal_id', $request->gudang_id)
-                  ->orWhere('gudang_tujuan_id', $request->gudang_id);
+        // Auto-scope: non super-admin/admin hanya melihat gudang sendiri
+        $user = $request->user();
+        if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+            if ($request->filled('gudang_id')) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('gudang_asal_id', $request->gudang_id)
+                      ->orWhere('gudang_tujuan_id', $request->gudang_id);
+                });
+            }
+        } elseif ($user->gudang_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('gudang_asal_id', $user->gudang_id)
+                  ->orWhere('gudang_tujuan_id', $user->gudang_id);
             });
         }
 

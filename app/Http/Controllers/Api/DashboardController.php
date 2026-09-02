@@ -17,7 +17,15 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $gudangId = $request->filled('gudang_id') ? (int) $request->gudang_id : null;
+        $user = $request->user();
+
+        // Auto-scope: non super-admin hanya melihat gudang sendiri
+        if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+            $gudangId = $request->filled('gudang_id') ? (int) $request->gudang_id : null;
+        } else {
+            $gudangId = $user->gudang_id;
+        }
+
         $chartRange = $request->input('chart_range', '24h');
 
         if (!in_array($chartRange, ['24h', '7d', '30d'])) {

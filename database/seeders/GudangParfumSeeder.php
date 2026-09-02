@@ -248,23 +248,23 @@ class GudangParfumSeeder extends Seeder
         // 9. USERS STAFF + PETUGAS (3 kota)
         // ==========================================================
         $staffDefs = [
-            ['budi.santoso@gudangparfum.id', 'Budi Santoso', 'PGJ-101', '0812-1100-2201', $gudangJkt->id, 'PG-001', 'Kepala Gudang', 'Jakarta', '2024-03-01'],
-            ['siti.rahayu@gudangparfum.id', 'Siti Rahayu', 'PGJ-102', '0812-1100-2202', $gudangJkt->id, 'PG-002', 'Admin Stok', 'Jakarta', '2024-06-17'],
-            ['agus.wijaya@gudangparfum.id', 'Agus Wijaya', 'PGB-201', '0812-3300-4401', $gudangBdg->id, 'PG-003', 'Kepala Gudang', 'Bandung', '2024-08-05'],
-            ['dewi.lestari@gudangparfum.id', 'Dewi Lestari', 'PGB-202', '0812-3300-4402', $gudangBdg->id, 'PG-004', 'Checker Gudang', 'Bandung', '2025-01-13'],
-            ['rudi.hartono@gudangparfum.id', 'Rudi Hartono', 'PGS-301', '0813-5500-6601', $gudangSby->id, 'PG-005', 'Kepala Gudang', 'Surabaya', '2024-05-20'],
-            ['intan.permata@gudangparfum.id', 'Intan Permata', 'PGS-302', '0813-5500-6602', $gudangSby->id, 'PG-006', 'Admin Stok', 'Surabaya', '2025-02-03'],
+            ['budi.santoso@gudangparfum.id', 'Budi Santoso', 'PGJ-101', '0812-1100-2201', $gudangJkt->id, 'PG-001', 'Kepala Gudang', 'Jakarta', '2024-03-01', 'kepala-gudang'],
+            ['siti.rahayu@gudangparfum.id', 'Siti Rahayu', 'PGJ-102', '0812-1100-2202', $gudangJkt->id, 'PG-002', 'Admin Stok', 'Jakarta', '2024-06-17', 'admin-gudang'],
+            ['agus.wijaya@gudangparfum.id', 'Agus Wijaya', 'PGB-201', '0812-3300-4401', $gudangBdg->id, 'PG-003', 'Kepala Gudang', 'Bandung', '2024-08-05', 'kepala-gudang'],
+            ['dewi.lestari@gudangparfum.id', 'Dewi Lestari', 'PGB-202', '0812-3300-4402', $gudangBdg->id, 'PG-004', 'Checker Gudang', 'Bandung', '2025-01-13', 'checker'],
+            ['rudi.hartono@gudangparfum.id', 'Rudi Hartono', 'PGS-301', '0813-5500-6601', $gudangSby->id, 'PG-005', 'Kepala Gudang', 'Surabaya', '2024-05-20', 'kepala-gudang'],
+            ['intan.permata@gudangparfum.id', 'Intan Permata', 'PGS-302', '0813-5500-6602', $gudangSby->id, 'PG-006', 'Admin Stok', 'Surabaya', '2025-02-03', 'admin-gudang'],
         ];
 
         $staff = [];
         $usedPetugasKodes = Petugas::withTrashed()->pluck('kode')->all();
-        foreach ($staffDefs as $idx => [$email, $name, $noPegawai, $telp, $gudangId, $kodePetugas, $jabatan, $area, $bergabung]) {
+        foreach ($staffDefs as $idx => [$email, $name, $noPegawai, $telp, $gudangId, $kodePetugas, $jabatan, $area, $bergabung, $roleName]) {
             $user = User::firstOrCreate(['email' => $email], [
                 'name' => $name, 'password' => Hash::make('password'),
                 'gudang_id' => $gudangId, 'no_pegawai' => $noPegawai, 'telepon' => $telp,
                 'is_active' => true, 'last_login_at' => Carbon::now()->subDays($idx % 3)->setHour(7)->setMinute(rand(5, 45)),
             ]);
-            $user->assignRole('operator');
+            $user->syncRoles([$roleName]);
 
             if (! in_array($kodePetugas, $usedPetugasKodes)) {
                 $usedPetugasKodes[] = $kodePetugas;

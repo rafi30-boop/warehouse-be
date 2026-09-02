@@ -60,32 +60,12 @@ class RolePermissionSeeder extends Seeder
         $superAdmin->syncPermissions(Permission::all());
 
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        $admin->syncPermissions(Permission::all());
+        $adminPermissions = Permission::where('name', '!=', 'role-delete')->get();
+        $admin->syncPermissions($adminPermissions);
 
+        // DEPRECATED: role ini tidak digunakan lagi. Sync kosong agar FK aman.
         $operator = Role::firstOrCreate(['name' => 'operator']);
-        $operator->syncPermissions([
-            'gudang-list',
-            'barang-list', 'barang-create', 'barang-edit',
-            'kategori-list',
-            'supplier-list', 'supplier-create', 'supplier-edit',
-            'customer-list', 'customer-create', 'customer-edit',
-            'barang-masuk-list', 'barang-masuk-create',
-            'barang-keluar-list', 'barang-keluar-create', 'barang-keluar-deliver',
-            'mutasi-stok-list', 'mutasi-stok-create',
-            'stok-opname-list', 'stok-opname-create',
-            'absensi-list', 'absensi-create', 'absensi-edit',
-            'absensi-scan',
-            'izin-list', 'izin-create', 'izin-edit', 'izin-delete',
-            'petugas-list',
-            'shift-list',
-            'satuan-list',
-            'lokasi-rak-list',
-            'kartu-stok-list',
-            'notifikasi-list',
-            'batch-barang-list',
-            'jadwal-petugas-list',
-            'upload',
-        ]);
+        $operator->syncPermissions([]);
 
         // Admin Gudang - Manage specific warehouse operations
         $adminGudang = Role::firstOrCreate(['name' => 'admin-gudang']);
@@ -104,6 +84,8 @@ class RolePermissionSeeder extends Seeder
             'stok-opname-complete',
             'absensi-list', 'absensi-create', 'absensi-edit',
             'absensi-scan',
+            'izin-list', 'izin-approve',
+            'petugas-list',
             'laporan-stok', 'laporan-barang-masuk', 'laporan-barang-keluar',
             'laporan-mutasi-stok', 'laporan-stok-opname',
             'kartu-stok-list',
@@ -127,10 +109,11 @@ class RolePermissionSeeder extends Seeder
             'stok-opname-list', 'stok-opname-create', 'stok-opname-start',
             'stok-opname-complete', 'stok-opname-cancel',
             'absensi-list', 'absensi-edit', 'laporan-absensi',
+            'izin-list', 'izin-approve',
             'laporan-stok', 'laporan-barang-masuk', 'laporan-barang-keluar',
             'laporan-mutasi-stok', 'laporan-stok-opname', 'laporan-absensi',
             'kartu-stok-list',
-            'petugas-list',
+            'petugas-list', 'petugas-edit',
             'upload',
             'notifikasi-list',
         ]);
@@ -153,6 +136,9 @@ class RolePermissionSeeder extends Seeder
         $checker = Role::firstOrCreate(['name' => 'checker']);
         $checker->syncPermissions([
             'barang-list',
+            'barang-masuk-list',
+            'barang-keluar-list',
+            'absensi-list',
             'stok-opname-list', 'stok-opname-start', 'stok-opname-complete',
             'kartu-stok-list',
             'laporan-stok',

@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             GudangParfumSeeder::class,
             PetugasBackfillSeeder::class,
+            MigrasiOperatorSeeder::class,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBarangMasukRequest;
 use App\Http\Requests\UpdateBarangMasukRequest;
 use App\Models\BarangMasuk;
+use App\Policies\BasePolicy;
 use App\Services\NotifikasiService;
 use App\Services\StokService;
 use App\Traits\ApiResponse;
@@ -96,6 +97,8 @@ class BarangMasukController extends Controller
         if ($barangMasuk->status !== 'pending') {
             return $this->error('Hanya dokumen berstatus pending yang dapat disetujui', 422);
         }
+
+        BasePolicy::denyIfSelfApprove(request()->user(), $barangMasuk);
 
         $stokService = app(StokService::class);
 
@@ -202,8 +205,14 @@ class BarangMasukController extends Controller
 
         $query = BarangMasuk::with(['gudang', 'supplier', 'createdBy', 'details.barang', 'details.lokasiRak']);
 
-        if ($request->filled('gudang_id')) {
-            $query->where('gudang_id', $request->gudang_id);
+        // Auto-scope: non super-admin/admin hanya melihat gudang sendiri
+        $user = $request->user();
+        if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+            if ($request->filled('gudang_id')) {
+                $query->where('gudang_id', $request->gudang_id);
+            }
+        } elseif ($user->gudang_id) {
+            $query->where('gudang_id', $user->gudang_id);
         }
 
         if ($request->filled('supplier_id')) {

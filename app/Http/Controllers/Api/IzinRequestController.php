@@ -278,6 +278,11 @@ class IzinRequestController extends Controller
             return $this->error('Hanya pengajuan berstatus menunggu yang dapat disetujui.', 422);
         }
 
+        // SoD: approver cannot be the requester
+        if ($izinRequest->user_id === $request->user()->id) {
+            return $this->error('Anda tidak dapat menyetujui pengajuan izin Anda sendiri (Separation of Duties).', 403);
+        }
+
         // Dual-subject: resolve petugas or user — petugas tidak punya gudang_id sendiri, gudang diambil dari akun user terhubung
         $izinRequest->loadMissing(['petugas.user', 'user']);
         $pegawai = $izinRequest->petugas;
@@ -403,6 +408,11 @@ class IzinRequestController extends Controller
     {
         if ($izinRequest->status !== 'menunggu') {
             return $this->error('Hanya pengajuan berstatus menunggu yang dapat ditolak.', 422);
+        }
+
+        // SoD: rejector cannot be the requester
+        if ($izinRequest->user_id === $request->user()->id) {
+            return $this->error('Anda tidak dapat menolak pengajuan izin Anda sendiri (Separation of Duties).', 403);
         }
 
         $validated = $request->validate([

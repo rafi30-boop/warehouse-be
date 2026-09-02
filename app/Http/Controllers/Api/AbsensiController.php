@@ -68,8 +68,14 @@ class AbsensiController extends Controller
             $query->where('petugas_id', $request->petugas_id);
         }
 
-        if ($request->filled('gudang_id')) {
-            $query->where('gudang_id', $request->gudang_id);
+        // Auto-scope: non super-admin/admin hanya melihat gudang sendiri
+        $user = $request->user();
+        if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+            if ($request->filled('gudang_id')) {
+                $query->where('gudang_id', $request->gudang_id);
+            }
+        } elseif ($user->gudang_id) {
+            $query->where('gudang_id', $user->gudang_id);
         }
 
         if ($request->filled('tanggal')) {

@@ -89,6 +89,14 @@ class KartuStokController extends Controller
 
         $query = KartuStok::with(['barang', 'gudang', 'lokasiRak', 'createdBy']);
 
+        // Auto-scope: non super-admin/admin hanya melihat gudang sendiri
+        $user = $request->user();
+        if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+            // Admin bisa filter gudang_id bebas
+        } elseif ($user->gudang_id) {
+            $query->where('gudang_id', $user->gudang_id);
+        }
+
         foreach (['barang_id', 'gudang_id', 'lokasi_rak_id', 'tipe'] as $field) {
             if ($request->filled($field)) {
                 $query->where($field, $request->{$field});
