@@ -22,6 +22,9 @@ class AbsensiScanTest extends ApiTestCase
     {
         parent::setUp();
 
+        // Scanner device bertindak sebagai operator + permission scan.
+        $this->operatorUser->givePermissionTo('absensi-scan');
+
         $this->gudang = Gudang::factory()->create();
         $this->shift = Shift::factory()->create([
             'nama' => 'Shift Pagi',

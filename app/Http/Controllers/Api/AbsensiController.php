@@ -7,6 +7,7 @@ use App\Http\Requests\ScanAbsensiRequest;
 use App\Http\Requests\StoreAbsensiRequest;
 use App\Http\Requests\UpdateAbsensiRequest;
 use App\Models\Absensi;
+use App\Policies\BasePolicy;
 use App\Models\Gudang;
 use App\Models\JadwalPetugas;
 use App\Models\Shift;
@@ -26,8 +27,9 @@ class AbsensiController extends Controller
     public function __construct()
     {
         $this->middleware('permission:absensi-list|absensi-create|absensi-edit|absensi-delete', ['only' => ['index', 'show']]);
-        $this->middleware('permission:absensi-create', ['only' => ['store']]);
-        $this->middleware('permission:absensi-edit', ['only' => ['update']]);
+        // Input manual (store/update) hanya untuk atasan (pemegang absensi-edit).
+        // Kehadiran bawahan tercatat via scan QR (absensi-scan) — bukan form.
+        $this->middleware('permission:absensi-edit', ['only' => ['store', 'update']]);
         $this->middleware('permission:absensi-delete', ['only' => ['destroy']]);
         $this->middleware('permission:absensi-scan', ['only' => ['scan']]);
     }
@@ -110,7 +112,9 @@ class AbsensiController extends Controller
     )]
     public function store(StoreAbsensiRequest $request)
     {
-        return $this->success(Absensi::create($request->validated()), 'Absensi berhasil dibuat', 201);
+        $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? null);
+        return $this->success(Absensi::create($data), 'Absensi berhasil dibuat', 201);
     }
 
     #[OA\Get(
@@ -161,7 +165,9 @@ class AbsensiController extends Controller
     )]
     public function update(UpdateAbsensiRequest $request, Absensi $absensi)
     {
-        $absensi->update($request->validated());
+        $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? $absensi->gudang_id);
+        $absensi->update($data);
 
         return $this->success($absensi->load(['user', 'gudang', 'shift', 'approvedBy']), 'Absensi berhasil diperbarui');
     }
@@ -363,10 +369,8 @@ class AbsensiController extends Controller
             ? (int) $request->input('gudang_id')
             : $subject['gudangId'];
 
-        if (! $gudangId) {
-            $gudangId = Gudang::orderBy('id')->value('id') ?: 0;
-        }
-
+        // Tanpa fallback gudang acak: absensi wajib terikat gudang yang jelas
+        // (dari subjek, pemindai, atau parameter) demi integritas data.
         if (! $gudangId) {
             return $this->error('Gudang tidak diketahui. Kirim gudang_id atau atur gudang akun pemindai.', 422);
         }

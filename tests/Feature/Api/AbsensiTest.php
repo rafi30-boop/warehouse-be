@@ -30,6 +30,7 @@ class AbsensiTest extends ApiTestCase
             'tanggal' => now()->format('Y-m-d'),
             'jam_masuk' => '07:00',
             'status' => 'hadir',
+            'keterangan' => 'Masuk tepat waktu',
         ]);
         $response->assertCreated()
             ->assertJsonFragment(['status' => 'hadir']);
@@ -49,6 +50,7 @@ class AbsensiTest extends ApiTestCase
         $absensi = Absensi::factory()->create();
         $response = $this->putJson("/api/absensi/{$absensi->id}", [
             'jam_pulang' => '15:00',
+            'keterangan' => 'Pulang sesuai jadwal',
         ]);
         $response->assertOk()
             ->assertJsonFragment(['jam_pulang' => '15:00']);

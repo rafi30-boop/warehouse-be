@@ -76,6 +76,9 @@ class PetugasV2Test extends ApiTestCase
         Petugas::create(['nama' => 'Budi Karyawan', 'user_id' => $a->id, 'kode' => 'K-A', 'status_operasional' => 'Aktif']);
         Petugas::create(['nama' => 'Sari Karyawan', 'kode' => 'K-B', 'status_operasional' => 'Non-Aktif']);
 
+        // Operator boleh melihat daftar, tapi tidak boleh membuat.
+        $this->operatorUser->givePermissionTo('petugas-list');
+
         $this->actingAsOperator();
         $this->getJson('/api/petugas?status=Non-Aktif')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.nama', 'Sari Karyawan');
         $this->getJson('/api/petugas?search=Budi')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.kode', 'K-A');

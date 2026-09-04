@@ -7,6 +7,7 @@ use App\Models\Gudang;
 use App\Models\IzinRequest;
 use App\Models\Shift;
 use App\Models\User;
+use Laravel\Passport\Passport;
 
 class IzinRequestTest extends ApiTestCase
 {
@@ -19,6 +20,12 @@ class IzinRequestTest extends ApiTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // operatorUser berperan sebagai pemilik pengajuan biasa:
+        // boleh CRUD milik sendiri, bukan approver, tanpa hak on-behalf.
+        $this->operatorUser->givePermissionTo([
+            'izin-list', 'izin-create', 'izin-delete',
+        ]);
 
         $this->shift = Shift::factory()->create(['status' => 'aktif']);
         $this->gudang = Gudang::factory()->create();
@@ -43,9 +50,12 @@ class IzinRequestTest extends ApiTestCase
     {
         $this->actingAsOperator();
 
-        $response = $this->postJson('/api/izin', $this->validPayload() + [
+        // Self-service tanpa izin-edit: tanggal harus ke depan + milik sendiri.
+        $response = $this->postJson('/api/izin', $this->validPayload([
+            'tanggal_mulai' => today()->addDay()->toDateString(),
+            'tanggal_selesai' => today()->addDays(2)->toDateString(),
             'user_id' => $this->adminUser->id,
-        ]);
+        ]));
 
         $response->assertCreated()
             ->assertJsonPath('data.user.id', $this->operatorUser->id)
@@ -102,8 +112,15 @@ class IzinRequestTest extends ApiTestCase
     {
         $izin = IzinRequest::create($this->validPayload() + ['user_id' => $this->operatorUser->id]);
 
+        // Pemegang izin-edit (admin) boleh mengubah milik orang lain yang pending.
         $this->actingAsAdmin();
-        $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'diubah admin'])->assertStatus(403);
+        $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'diubah admin'])
+            ->assertOk()
+            ->assertJsonPath('data.alasan', 'diubah admin');
+
+        // Tanpa izin-edit, milik orang lain tetap 403.
+        Passport::actingAs(User::find($this->pegawai->id), ['*']);
+        $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'diubah orang lain'])->assertStatus(403);
 
         $this->actingAsOperator();
         $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'alasan baru'])
@@ -111,7 +128,8 @@ class IzinRequestTest extends ApiTestCase
             ->assertJsonPath('data.alasan', 'alasan baru');
 
         $izin->update(['status' => 'disetujui']);
-        $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'x'])->assertStatus(403);
+        // Non-pending tidak bisa diubah (422), bukan 403.
+        $this->putJson("/api/izin/{$izin->id}", ['alasan' => 'x'])->assertStatus(422);
     }
 
     public function test_destroy_only_pending()
@@ -199,7 +217,9 @@ class IzinRequestTest extends ApiTestCase
         $izin = IzinRequest::create($this->validPayload() + ['user_id' => $this->pegawai->id]);
 
         $this->actingAsAdmin();
-        $response = $this->postJson("/api/izin/{$izin->id}/reject");
+        $response = $this->postJson("/api/izin/{$izin->id}/reject", [
+            'catatan_penolakan' => 'Tidak memenuhi syarat',
+        ]);
 
         $response->assertOk()->assertJsonPath('data.status', 'ditolak');
         $this->assertDatabaseMissing('absensi', ['user_id' => $this->pegawai->id]);

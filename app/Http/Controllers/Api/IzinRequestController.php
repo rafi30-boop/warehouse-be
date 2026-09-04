@@ -24,8 +24,9 @@ class IzinRequestController extends Controller
     {
         $this->middleware('permission:izin-list', ['only' => ['index', 'show']]);
         $this->middleware('permission:izin-create', ['only' => ['store']]);
-        $this->middleware('permission:izin-edit', ['only' => ['update']]);
-        $this->middleware('permission:izin-delete', ['only' => ['destroy']]);
+        // update/destroy: gate view-level saja — controller menegakkan
+        // "owner atau pemegang izin-edit/izin-delete".
+        $this->middleware('permission:izin-list', ['only' => ['update', 'destroy']]);
         $this->middleware('permission:izin-approve', ['only' => ['approve', 'reject']]);
     }
 
@@ -135,10 +136,12 @@ class IzinRequestController extends Controller
             );
         }
 
-        $izin = IzinRequest::create($data + [
+        // array_merge (bukan union +): user_id & status hasil forcing
+        // harus menimpa apa pun yang dikirim di payload.
+        $izin = IzinRequest::create(array_merge($data, [
             'user_id' => $userId,
             'status' => 'menunggu',
-        ]);
+        ]));
 
         // Notify all users with izin-approve permission
         $approvers = User::permission('izin-approve')->get();
