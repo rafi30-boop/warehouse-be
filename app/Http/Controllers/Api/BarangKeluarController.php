@@ -144,6 +144,7 @@ class BarangKeluarController extends Controller
     )]
     public function reject(Request $request, BarangKeluar $barangKeluar)
     {
+        BasePolicy::denyIfSelfApprove(request()->user(), $barangKeluar);
         if ($barangKeluar->status !== 'pending') {
             return $this->error('Hanya dokumen berstatus pending yang dapat ditolak', 422);
         }
@@ -327,6 +328,7 @@ class BarangKeluarController extends Controller
     public function store(StoreBarangKeluarRequest $request)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? null);
         $details = $data['details'] ?? [];
         unset($data['details']);
 
@@ -407,6 +409,7 @@ class BarangKeluarController extends Controller
     public function update(UpdateBarangKeluarRequest $request, BarangKeluar $barangKeluar)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? $barangKeluar->gudang_id);
         $details = $data['details'] ?? null;
         unset($data['details']);
 

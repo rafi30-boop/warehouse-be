@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoleRequest;
+use App\Policies\BasePolicy;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -69,6 +70,7 @@ class RoleController extends Controller
     public function store(StoreRoleRequest $request)
     {
         $data = $request->validated();
+        BasePolicy::denyUngrantedPermissionGrant($request->user(), $data['permissions'] ?? []);
         $role = Role::create(['name' => $data['name']]);
 
         if (isset($data['permissions'])) {
@@ -125,6 +127,8 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role)
     {
         $data = $request->validated();
+        BasePolicy::denySystemRoleRename($role, $data['name'] ?? null);
+        BasePolicy::denyUngrantedPermissionGrant($request->user(), $data['permissions'] ?? []);
         $role->update($data);
 
         if (isset($data['permissions'])) {
@@ -153,8 +157,10 @@ class RoleController extends Controller
             new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function destroy(Role $role)
+    public function destroy(Request $request, Role $role)
     {
+        abort_unless($request->user()->hasRole('super-admin'), 403, 'Hanya super-admin yang dapat menghapus role.');
+        BasePolicy::denySystemRoleDelete($role);
         $role->delete();
 
         return $this->success(null, 'Role berhasil dihapus');

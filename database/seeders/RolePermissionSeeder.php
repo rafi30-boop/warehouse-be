@@ -50,6 +50,7 @@ class RolePermissionSeeder extends Seeder
             'history-harga-list', 'history-harga-create', 'history-harga-delete',
             'jadwal-petugas-list', 'jadwal-petugas-create', 'jadwal-petugas-edit', 'jadwal-petugas-delete',
             'upload',
+            'dashboard-view',
         ];
 
         foreach ($permissions as $permission) {
@@ -90,6 +91,7 @@ class RolePermissionSeeder extends Seeder
             'laporan-mutasi-stok', 'laporan-stok-opname',
             'kartu-stok-list',
             'upload',
+            'dashboard-view',
         ]);
 
         // Kepala Gudang - Higher level approval and reporting
@@ -116,6 +118,7 @@ class RolePermissionSeeder extends Seeder
             'petugas-list', 'petugas-edit',
             'upload',
             'notifikasi-list',
+            'dashboard-view',
         ]);
 
         // Petugas Gudang - Basic operational permissions
@@ -126,10 +129,11 @@ class RolePermissionSeeder extends Seeder
             'barang-keluar-list', 'barang-keluar-create', 'barang-keluar-deliver',
             'mutasi-stok-list', 'mutasi-stok-create',
             'stok-opname-list', 'stok-opname-create', 'stok-opname-start',
-            'absensi-list', 'absensi-create', 'absensi-scan',
+            'absensi-list', 'absensi-scan',
             'kartu-stok-list',
             'jadwal-petugas-list',
             'upload',
+            'dashboard-view',
         ]);
 
         // Checker - Verify transactions and stock
@@ -143,6 +147,7 @@ class RolePermissionSeeder extends Seeder
             'kartu-stok-list',
             'laporan-stok',
             'aktivitas-log-list',
+            'dashboard-view',
         ]);
 
         // Kurir/Driver - Delivery management only
@@ -150,7 +155,7 @@ class RolePermissionSeeder extends Seeder
         $kurirDriver->syncPermissions([
             'barang-keluar-list',
             'barang-keluar-deliver',
-            
+            'dashboard-view',
         ]);
     }
 }

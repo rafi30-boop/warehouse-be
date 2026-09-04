@@ -13,6 +13,7 @@ class DashboardController extends Controller
 
     public function __construct(private DashboardService $dashboardService)
     {
+        $this->middleware('permission:dashboard-view', ['only' => ['index']]);
     }
 
     public function index(Request $request)
@@ -32,7 +33,7 @@ class DashboardController extends Controller
             $chartRange = '24h';
         }
 
-        $data = $this->dashboardService->getDashboardData($gudangId, $chartRange);
+        $data = $this->dashboardService->getDashboardData($gudangId, $chartRange, $user);
 
         return $this->success($data, 'Dashboard data berhasil dimuat');
     }

@@ -99,6 +99,7 @@ class MutasiStokController extends Controller
     )]
     public function reject(Request $request, MutasiStok $mutasiStok)
     {
+        BasePolicy::denyIfSelfApprove(request()->user(), $mutasiStok);
         if ($mutasiStok->status !== 'pending') {
             return $this->error('Hanya dokumen berstatus pending yang dapat ditolak', 422);
         }
@@ -284,6 +285,7 @@ class MutasiStokController extends Controller
     public function store(StoreMutasiStokRequest $request)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_asal_id'] ?? null);
         $data['created_by'] = $request->user()->id;
 
         return $this->success(MutasiStok::create($data), 'Mutasi stok berhasil dibuat', 201);
@@ -336,6 +338,7 @@ class MutasiStokController extends Controller
     public function update(UpdateMutasiStokRequest $request, MutasiStok $mutasiStok)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_asal_id'] ?? $mutasiStok->gudang_asal_id);
         $menjadiCompleted = ($data['status'] ?? null) === 'completed' && $mutasiStok->status !== 'completed';
 
         DB::transaction(function () use ($data, $mutasiStok) {

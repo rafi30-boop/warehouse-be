@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStokOpnameRequest;
 use App\Http\Requests\UpdateStokOpnameRequest;
 use App\Models\StokOpname;
+use App\Policies\BasePolicy;
 use App\Services\StokService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -81,6 +82,7 @@ class StokOpnameController extends Controller
     )]
     public function complete(StokOpname $stokOpname)
     {
+        BasePolicy::denyIfSelfApprove(request()->user(), $stokOpname);
         if ($stokOpname->status !== 'in_progress') {
             return $this->error('Hanya dokumen berstatus in_progress yang dapat diselesaikan', 422);
         }
@@ -203,6 +205,7 @@ class StokOpnameController extends Controller
     public function store(StoreStokOpnameRequest $request)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? null);
         $details = $data['details'] ?? [];
         unset($data['details']);
 
@@ -267,6 +270,7 @@ class StokOpnameController extends Controller
     public function update(UpdateStokOpnameRequest $request, StokOpname $stokOpname)
     {
         $data = $request->validated();
+        BasePolicy::denyCrossGudangWrite($request->user(), $data['gudang_id'] ?? $stokOpname->gudang_id);
         $details = $data['details'] ?? null;
         unset($data['details']);
 

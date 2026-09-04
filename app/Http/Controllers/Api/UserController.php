@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Policies\BasePolicy;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -98,6 +99,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
+        BasePolicy::denyUngrantedRoleAssignment($request->user(), $data['roles'] ?? []);
         $data['password'] = Hash::make($data['password']);
         $user = User::create($data);
 
@@ -156,6 +158,24 @@ class UserController extends Controller
     {
         $data = $request->validated();
 
+        // Cegah self-lockout: akun sendiri tidak boleh dinonaktifkan / diubah role-nya.
+        if ($user->id === $request->user()->id) {
+            if (array_key_exists('is_active', $data) && ! $data['is_active']) {
+                abort(403, 'Anda tidak dapat menonaktifkan akun sendiri.');
+            }
+            if (isset($data['roles'])) {
+                abort(403, 'Role akun sendiri hanya dapat diubah oleh super-admin lain.');
+            }
+        }
+
+        $losesSuperAdmin = (isset($data['roles']) && ! in_array('super-admin', $data['roles'], true))
+            || (array_key_exists('is_active', $data) && ! $data['is_active']);
+        if ($losesSuperAdmin) {
+            BasePolicy::denyLastSuperAdminLoss($user);
+        }
+
+        BasePolicy::denyUngrantedRoleAssignment($request->user(), $data['roles'] ?? []);
+
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
@@ -188,8 +208,12 @@ class UserController extends Controller
             new OA\Response(response: 404, description: 'Not found', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        if ($user->id === $request->user()->id) {
+            abort(403, 'Anda tidak dapat menghapus akun sendiri.');
+        }
+        BasePolicy::denyLastSuperAdminLoss($user);
         try {
             $user->forceDelete();
         } catch (\Illuminate\Database\QueryException) {

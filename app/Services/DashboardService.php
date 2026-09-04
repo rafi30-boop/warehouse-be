@@ -18,6 +18,7 @@ use App\Models\StokOpname;
 use App\Models\StokOpnameDetail;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class DashboardService extends BaseService
 {
@@ -25,19 +26,36 @@ class DashboardService extends BaseService
     {
     }
 
-    public function getDashboardData(?int $gudangId = null, string $chartRange = '24h'): array
+    /**
+     * $user dipakai untuk strip field sensitif berbasis permission.
+     * null = tanpa strip (pemakaian console/internal).
+     */
+    public function getDashboardData(?int $gudangId = null, string $chartRange = '24h', ?User $user = null): array
     {
         return [
-            'metrics' => $this->getMetrics($gudangId),
+            'metrics' => $this->getMetrics($gudangId, $user),
             'chart' => $this->getChartData($gudangId, $chartRange),
-            'recent_activity' => $this->getRecentActivity($gudangId),
-            'alerts' => $this->getAlerts($gudangId),
+            'recent_activity' => $this->getRecentActivity($gudangId, $user),
+            'alerts' => $this->getAlerts($gudangId, $user),
             'warehouse_capacity' => $this->getWarehouseCapacity($gudangId),
-            'attendance_today' => $this->getAttendanceToday($gudangId),
+            'attendance_today' => $this->getAttendanceToday($gudangId, $user),
         ];
     }
 
-    private function getMetrics(?int $gudangId): array
+    private function can(?User $user, string ...$permissions): bool
+    {
+        if ($user === null) {
+            return true;
+        }
+        foreach ($permissions as $permission) {
+            if ($user->can($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function getMetrics(?int $gudangId, ?User $user = null): array
     {
         $totalGudang = $gudangId ? 1 : Gudang::count();
 
@@ -111,7 +129,8 @@ class DashboardService extends BaseService
         return [
             'total_barang' => $totalBarang,
             'total_stok' => $totalStok,
-            'total_nilai_stok' => $totalNilaiStok,
+            // Nilai Rp hanya untuk yang boleh melihat laporan stok.
+            'total_nilai_stok' => $this->can($user, 'laporan-stok') ? $totalNilaiStok : null,
             'total_gudang' => $totalGudang,
             'barang_masuk_bulan_ini' => [
                 'qty' => $masukQty,
@@ -121,7 +140,8 @@ class DashboardService extends BaseService
                 'qty' => $keluarQty,
                 'count' => $keluarCount,
             ],
-            'pending_approvals' => $pendingApprovals,
+            // Pending approvals hanya relevan bagi yang bisa menyetujui.
+            'pending_approvals' => $this->can($user, 'barang-masuk-approve', 'barang-keluar-approve', 'mutasi-stok-approve', 'izin-approve') ? $pendingApprovals : null,
         ];
     }
 
@@ -217,8 +237,13 @@ class DashboardService extends BaseService
         ];
     }
 
-    private function getRecentActivity(?int $gudangId): array
+    private function getRecentActivity(?int $gudangId, ?User $user = null): array
     {
+        // Aktivitas staf lain hanya untuk yang boleh melihat activity log.
+        if (! $this->can($user, 'aktivitas-log-list')) {
+            return [];
+        }
+
         $query = AktivitasLog::with(['user.roles'])
             ->whereIn('action', ['store', 'approve', 'reject', 'deliver', 'complete', 'scan', 'login', 'start', 'cancel']);
 
@@ -295,7 +320,7 @@ class DashboardService extends BaseService
         return $logs;
     }
 
-    private function getAlerts(?int $gudangId): array
+    private function getAlerts(?int $gudangId, ?User $user = null): array
     {
         $stokKritis = Barang::where('status', 'aktif')
             ->get()
@@ -359,8 +384,8 @@ class DashboardService extends BaseService
 
         return [
             'stok_kritis' => $stokKritis,
-            'pending_masuk' => $pendingMasuk,
-            'pending_opname' => $pendingOpname,
+            'pending_masuk' => $this->can($user, 'barang-masuk-list') ? $pendingMasuk : [],
+            'pending_opname' => $this->can($user, 'stok-opname-list') ? $pendingOpname : [],
         ];
     }
 
@@ -397,8 +422,12 @@ class DashboardService extends BaseService
         })->toArray();
     }
 
-    private function getAttendanceToday(?int $gudangId): array
+    private function getAttendanceToday(?int $gudangId, ?User $user = null): array
     {
+        if (! $this->can($user, 'absensi-list')) {
+            return [];
+        }
+
         $today = Carbon::now()->toDateString();
 
         $shifts = DB::table('shift')->where('status', 'aktif')->get();
