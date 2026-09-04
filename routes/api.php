@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\LokasiRakController;
 use App\Http\Controllers\Api\MutasiStokController;
 use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\PetugasController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PortalController;
 use App\Http\Controllers\Api\QrController;
 use App\Http\Controllers\Api\RoleController;
@@ -92,6 +93,7 @@ Route::middleware(['auth:api', 'throttle:api'])->group(function () {
     Route::apiResource('izin', IzinRequestController::class)->parameters(['izin' => 'izin_request']);
     Route::apiResource('shift', ShiftController::class);
     Route::apiResource('user', UserController::class);
+    Route::get('permissions', [PermissionController::class, 'index']);
     Route::apiResource('role', RoleController::class);
 
     Route::apiResource('satuan', SatuanController::class);

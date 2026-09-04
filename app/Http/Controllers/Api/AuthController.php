@@ -8,7 +8,6 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use OpenApi\Attributes as OA;
-use Spatie\Permission\Models\Role;
 
 #[OA\Tag(name: 'Auth')]
 class AuthController extends Controller
@@ -58,7 +57,7 @@ class AuthController extends Controller
         $token = $user->createToken('api-token')->accessToken;
 
         return $this->success([
-            'user' => $user->load(['roles', 'gudang']),
+            'user' => $user->load(['roles.permissions', 'gudang']),
             'token' => $token,
         ], 'Login berhasil');
     }
@@ -97,7 +96,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $user->assignRole(Role::where('name', 'operator')->first());
+        // Registrasi publik tidak diberi role apapun (role 'operator' deprecated).
+        // Role diberikan manual oleh admin via manajemen user.
 
         $token = $user->createToken('api-token')->accessToken;
 

@@ -24,3 +24,6 @@ yarn-error.log
 
 /.zed
 /dump.rdb
+
+# Kredensial demo lokal — jangan commit
+/demo-accounts.txt
